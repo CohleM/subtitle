@@ -1,65 +1,52 @@
-"use client";
+'use client';
+import { Player } from '@remotion/player';
+import { useEffect, useState } from 'react';
+import transcriptJson from '../data/transcript.initial.json';
+import { SubtitleGroup } from '../shared/types/subtitles';
+import { TranscriptEditor } from '../components/TranscriptEditor';
+import { Main } from '../remotion/Main';
 
-import { Player } from "@remotion/player";
-import type { NextPage } from "next";
-import { useMemo, useState } from "react";
-import { z } from "zod";
-import {
-  defaultMyCompProps,
-  CompositionProps,
-  DURATION_IN_FRAMES,
-  VIDEO_FPS,
-  VIDEO_HEIGHT,
-  VIDEO_WIDTH,
-} from "../../types/constants";
-import { RenderControls } from "../components/RenderControls";
-import { Spacing } from "../components/Spacing";
-import { Tips } from "../components/Tips";
-import { Main } from "../remotion/MyComp/Main";
+export default function Page() {
+  const [transcript, setTranscript] = useState<SubtitleGroup[]>([]);
 
-const Home: NextPage = () => {
-  const [text, setText] = useState<string>(defaultMyCompProps.title);
+  useEffect(() => {
+    setTranscript(transcriptJson as SubtitleGroup[]);
+  }, []);
 
-  const inputProps: z.infer<typeof CompositionProps> = useMemo(() => {
-    return {
-      title: text,
-    };
-  }, [text]);
+  // Calculate height based on aspect ratio (1080x1920 = 9:16)
+  const playerWidth = 260;
+  const playerHeight = (playerWidth * 1920) / 1080;
 
   return (
-    <div>
-      <div className="max-w-screen-md m-auto mb-5">
-        <div className="overflow-hidden rounded-geist shadow-[0_0_200px_rgba(0,0,0,0.15)] mb-10 mt-16">
+    <div className="max-w-7xl mx-auto p-6 bg-white min-h-screen">
+      <div className="flex gap-6">
+        {/* Left side - Player */}
+        <div className="flex-shrink-0">
           <Player
             component={Main}
-            inputProps={inputProps}
-            durationInFrames={DURATION_IN_FRAMES}
-            fps={VIDEO_FPS}
-            compositionHeight={VIDEO_HEIGHT}
-            compositionWidth={VIDEO_WIDTH}
-            style={{
-              // Can't use tailwind class for width since player's default styles take presedence over tailwind's,
-              // but not over inline styles
-              width: "100%",
-            }}
+            inputProps={{ transcript }}
+            durationInFrames={1800}
+            fps={30}
+            compositionWidth={1080}
+            compositionHeight={1920}
             controls
-            autoPlay
-            loop
+            // autoPlay
+            // loop
+            style={{
+              width: playerWidth,
+              height: playerHeight
+            }}
           />
         </div>
-        <RenderControls
-          text={text}
-          setText={setText}
-          inputProps={inputProps}
-        ></RenderControls>
-        <Spacing></Spacing>
-        <Spacing></Spacing>
-        <Spacing></Spacing>
-        <Spacing></Spacing>
-        <Tips></Tips>
+
+        {/* Right side - Transcript Editor */}
+        <div className="flex-1 min-w-0">
+          <TranscriptEditor
+            transcript={transcript}
+            setTranscript={setTranscript}
+          />
+        </div>
       </div>
     </div>
   );
-};
-
-export default Home;
+}
