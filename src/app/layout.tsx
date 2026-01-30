@@ -12,6 +12,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
+
 export default function RootLayout({
   children,
 }: {
@@ -23,3 +24,34 @@ export default function RootLayout({
     </html>
   );
 }
+// app/layout.tsx or pages/_app.tsx
+
+
+// import { Inter } from 'next/font/google';
+
+// const inter = Inter({
+//   subsets: ['latin'],
+//   display: 'swap',
+//   // Tight tracking similar to the image
+//   variable: '--font-inter',
+// });
+
+
+// export default function RootLayout({
+//   children,
+// }: {
+//   children: React.ReactNode;
+// }) {
+//   return (
+//     <html lang="en" className={inter.variable}>
+//       <body className={`${inter.className} antialiased`}>
+//         {children}
+//       </body>
+//     </html>
+//   );
+// }
+
+
+
+
+
