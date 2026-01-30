@@ -1,4 +1,4 @@
-import { SubtitleGroup } from '../shared/types/subtitles';
+import { SubtitleGroup } from '../../types/subtitles';
 
 export const updateWordText = (
     transcript: SubtitleGroup[],

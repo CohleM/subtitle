@@ -1,4 +1,4 @@
-import { Line, SubtitleGroup } from '../shared/types/subtitles';
+import { Line, SubtitleGroup } from '../../types/subtitles';
 import { WordEditor } from './WordEditor';
 
 export const LineEditor: React.FC<{
@@ -8,7 +8,6 @@ export const LineEditor: React.FC<{
     setTranscript: (t: SubtitleGroup[]) => void;
 }> = ({ groupId, line, transcript, setTranscript }) => {
 
-    // Get font style based on font_type
     const getFontClass = (type: string) => {
         switch (type) {
             case 'bold': return 'font-bold text-gray-900';
@@ -30,10 +29,8 @@ export const LineEditor: React.FC<{
                 </span>
             </div>
 
-            {/* Full text preview (preserves original casing) */}
-            <div className="mb-3 text-sm text-gray-600 leading-relaxed">
-                {line.text}
-            </div>
+            {/* Full text preview */}
+
 
             {/* Words */}
             <div className="flex flex-wrap gap-2">

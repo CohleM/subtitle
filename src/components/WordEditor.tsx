@@ -1,4 +1,4 @@
-import { Word, SubtitleGroup } from '../shared/types/subtitles';
+import { Word, SubtitleGroup } from '../../types/subtitles';
 import { updateWordText } from '../utils/transcript';
 
 export const WordEditor: React.FC<{

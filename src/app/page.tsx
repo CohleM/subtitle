@@ -1,19 +1,50 @@
 'use client';
 
 import { Player } from '@remotion/player';
-import { useEffect, useState } from 'react';
-import {
-  Plus,
-  EyeOff,
-  Trash2,
-  Monitor,
-  Maximize,
-  Wand2
-} from 'lucide-react';
-import transcriptJson from '../data/transcript.initial.json';
-import { SubtitleGroup } from '../shared/types/subtitles';
+import { useEffect, useState, useMemo, memo } from 'react';
+import { Plus, Trash2, Monitor, Maximize, Wand2 } from 'lucide-react';
+import transcriptJson from '../data/transcript_30_min.json';
+import { SubtitleGroup } from '../../types/subtitles';
 import { Main } from '../remotion/Main';
 import { TranscriptEditor } from '../components/TranscriptEditor';
+import { StyleSelector } from '../components/StyleSelector';
+
+// ✅ Extract Player into its own memoized component
+const VideoPlayer = memo(function VideoPlayer({
+  transcript,
+  selectedStyle,
+  compositionWidth,
+  compositionHeight
+}: {
+  transcript: SubtitleGroup[];
+  selectedStyle: string;
+  compositionWidth: number;
+  compositionHeight: number;
+}) {
+  // ✅ Memoize inputProps - only changes when transcript or style actually changes
+  const inputProps = useMemo(() => ({
+    transcript,
+    style: selectedStyle
+  }), [transcript, selectedStyle]);
+
+  return (
+    <div className="w-full h-full bg-black overflow-hidden rounded-3xl border border-gray-200">
+      <Player
+        component={Main}
+        inputProps={inputProps}
+        durationInFrames={1800 * 30}
+        fps={30}
+        compositionWidth={compositionWidth}
+        compositionHeight={compositionHeight}
+        controls
+        style={{
+          width: '100%',
+          height: '100%',
+        }}
+      />
+    </div>
+  );
+});
 
 function Navbar() {
   return (
@@ -37,10 +68,12 @@ function Navbar() {
   );
 }
 
+
 export default function Page() {
   const [transcript, setTranscript] = useState<SubtitleGroup[]>([]);
   const [activeTab, setActiveTab] = useState<'style' | 'captions'>('captions');
-  const [isPortrait, setIsPortrait] = useState(true);
+  const [isPortrait, setIsPortrait] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState('basic');
 
   useEffect(() => {
     setTranscript(transcriptJson as SubtitleGroup[]);
@@ -51,15 +84,6 @@ export default function Page() {
 
   const handleDeleteSegment = (index: number) => {
     const newTranscript = transcript.filter((_, i) => i !== index);
-    setTranscript(newTranscript);
-  };
-
-  const handleToggleVisibility = (index: number) => {
-    const newTranscript = [...transcript];
-    newTranscript[index] = {
-      ...newTranscript[index],
-      hidden: !newTranscript[index].hidden
-    };
     setTranscript(newTranscript);
   };
 
@@ -75,9 +99,7 @@ export default function Page() {
             <div className="mb-6 flex bg-white border border-gray-200 rounded-xl p-1">
               <button
                 onClick={() => setIsPortrait(true)}
-                className={`flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${isPortrait
-                  ? 'bg-black text-white'
-                  : 'text-gray-500 hover:text-black'
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${isPortrait ? 'bg-black text-white' : 'text-gray-500 hover:text-black'
                   }`}
               >
                 <Maximize className="w-3.5 h-3.5" style={{ transform: 'rotate(90deg)' }} />
@@ -85,9 +107,7 @@ export default function Page() {
               </button>
               <button
                 onClick={() => setIsPortrait(false)}
-                className={`flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${!isPortrait
-                  ? 'bg-black text-white'
-                  : 'text-gray-500 hover:text-black'
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${!isPortrait ? 'bg-black text-white' : 'text-gray-500 hover:text-black'
                   }`}
               >
                 <Monitor className="w-3.5 h-3.5" />
@@ -112,29 +132,22 @@ export default function Page() {
                   justifyContent: 'center',
                 }}
               >
-                <div className="w-full h-full bg-black overflow-hidden rounded-3xl border border-gray-200">
-                  <Player
-                    component={Main}
-                    inputProps={{ transcript }}
-                    durationInFrames={1800}
-                    fps={30}
-                    compositionWidth={compositionWidth}
-                    compositionHeight={compositionHeight}
-                    controls
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                    }}
-                  />
-                </div>
+                {/* ✅ Now Player only re-renders when transcript or selectedStyle changes */}
+                <VideoPlayer
+                  transcript={transcript}
+                  selectedStyle={selectedStyle}
+                  compositionWidth={compositionWidth}
+                  compositionHeight={compositionHeight}
+                />
               </div>
             </div>
           </div>
 
-          {/* Right Side - Transcript Editor */}
+          {/* Right Side - Rest of your UI */}
+          {/* Right Side - Rest of your UI */}
           <div className="h-full bg-white flex flex-col overflow-hidden rounded-l-3xl">
 
-            {/* Header */}
+            {/* ✅ ADD THIS HEADER BACK */}
             <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200 shrink-0">
               <div className="flex items-center gap-2 bg-gray-100/50 p-1 rounded-xl">
                 <button
@@ -157,27 +170,44 @@ export default function Page() {
                 </button>
               </div>
 
-              <button className="flex items-center gap-2 px-5 py-2.5 bg-black text-white text-xs font-medium uppercase tracking-wider rounded-xl hover:bg-gray-800 transition-colors">
-                <Wand2 className="w-3.5 h-3.5" />
-                Generate Title
-              </button>
+              {activeTab === 'style' ? (
+                <button
+                  onClick={() => setActiveTab('captions')}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-black text-white text-xs font-medium uppercase tracking-wider rounded-xl hover:bg-gray-800 transition-colors"
+                >
+                  Customize {selectedStyle}
+                </button>
+              ) : (
+                <button className="flex items-center gap-2 px-5 py-2.5 bg-black text-white text-xs font-medium uppercase tracking-wider rounded-xl hover:bg-gray-800 transition-colors">
+                  <Wand2 className="w-3.5 h-3.5" />
+                  Generate Title
+                </button>
+              )}
             </div>
 
-            {/* Simple Summary Row */}
-            <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 shrink-0 bg-gray-50/30">
-              <span className="text-xs text-gray-500 uppercase tracking-wider">Segments</span>
-              <span className="text-xs font-medium text-black">
-                {transcript.length} groups • {transcript.reduce((acc, g) => acc + (g.lines?.length || 0), 0)} lines
-              </span>
-            </div>
-
-            {/* Transcript Editor Component */}
-            <div className="flex-1 overflow-y-auto">
-              <TranscriptEditor
-                transcript={transcript}
-                setTranscript={setTranscript}
+            {activeTab === 'style' ? (
+              <StyleSelector
+                selectedStyle={selectedStyle}
+                onStyleSelect={setSelectedStyle}
               />
-            </div>
+            ) : (
+              <>
+                {/* Summary Row */}
+                <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 shrink-0 bg-gray-50/30">
+                  <span className="text-xs text-gray-500 uppercase tracking-wider">Segments</span>
+                  <span className="text-xs font-medium text-black">
+                    {transcript.length} groups • {transcript.reduce((acc, g) => acc + (g.lines?.length || 0), 0)} lines
+                  </span>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  <TranscriptEditor
+                    transcript={transcript}
+                    setTranscript={setTranscript}
+                    onDelete={handleDeleteSegment}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

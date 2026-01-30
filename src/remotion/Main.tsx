@@ -1,8 +1,11 @@
 import { MyVideo } from './MyVideo';
-import { SubtitleGroup } from '../shared/types/subtitles';
+import { SubtitleGroup } from '../../types/subtitles';
 
-export const Main: React.FC<{
+type MainProps = {
     transcript: SubtitleGroup[];
-}> = ({ transcript }) => {
+    style?: string;
+};
+
+export const Main: React.FC<MainProps> = ({ transcript, style = 'basic' }) => {
     return <MyVideo groups={transcript} />;
 };

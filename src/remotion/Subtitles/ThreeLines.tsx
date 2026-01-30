@@ -15,7 +15,7 @@ import { loadFont as loadInter } from '@remotion/google-fonts/Poppins';
 import { loadFont as loadMontserrat } from '@remotion/google-fonts/Poppins';
 import { loadFont as loadBebas } from '@remotion/google-fonts/BebasNeue';
 import { loadFont as loadPlayfair } from '@remotion/google-fonts/PlayfairDisplay'; // Added for italic
-import { SubtitleGroup, Line, Word } from '../../shared/types/subtitles';
+import { SubtitleGroup, Line, Word } from '../../../types/subtitles';
 
 const LINE_SPACING = 0;
 
@@ -207,7 +207,7 @@ const LineText: React.FC<{
             style={{
                 justifyContent: 'flex-start',
                 alignItems: 'center',
-                paddingTop: 1500
+                paddingTop: 540
             }}
         >
             <div

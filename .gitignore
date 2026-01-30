@@ -37,3 +37,6 @@ next-env.d.ts
 out/
 .env
 build
+
+*.mp4
+*.mp3

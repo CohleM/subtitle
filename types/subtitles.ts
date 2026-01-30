@@ -19,8 +19,7 @@ export type SubtitleGroup = {
     id: string;
     start: number;
     end: number;
-    group_text?: string;  // Add this
+    group_text?: string;
     lines: Line[];
-    hidden?: boolean;     // Add this for toggling
-    function?: string;    // Add this if present in your JSON
+    function?: string;
 };
