@@ -1,3 +1,4 @@
+// src/app/shared/types/subtitles.ts
 export type Word = {
     id: string;
     word: string;
@@ -7,6 +8,7 @@ export type Word = {
 
 export type Line = {
     id: string;
+    text: string;
     start: number;
     end: number;
     font_type: 'bold' | 'thin' | 'normal' | 'italic';
@@ -17,5 +19,8 @@ export type SubtitleGroup = {
     id: string;
     start: number;
     end: number;
+    group_text?: string;  // Add this
     lines: Line[];
+    hidden?: boolean;     // Add this for toggling
+    function?: string;    // Add this if present in your JSON
 };

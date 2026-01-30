@@ -10,9 +10,11 @@ export const WordEditor: React.FC<{
 }> = ({ groupId, lineId, word, transcript, setTranscript }) => {
     return (
         <input
-            className="border px-2 py-1 rounded text-sm w-auto"
+            className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-900 
+                     hover:border-gray-400 focus:border-black focus:outline-none focus:bg-white
+                     transition-all w-auto min-w-[50px] text-center"
             value={word.word}
-            onChange={e =>
+            onChange={(e) =>
                 setTranscript(
                     updateWordText(
                         transcript,
@@ -23,6 +25,7 @@ export const WordEditor: React.FC<{
                     )
                 )
             }
+            spellCheck={false}
         />
     );
 };

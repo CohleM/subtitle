@@ -13,8 +13,8 @@ import {
 import transcriptJson from '../data/transcript.initial.json';
 import { SubtitleGroup } from '../shared/types/subtitles';
 import { Main } from '../remotion/Main';
+import { TranscriptEditor } from '../components/TranscriptEditor';
 
-// Classy Navbar - More rounded
 function Navbar() {
   return (
     <nav className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0">
@@ -72,7 +72,6 @@ export default function Page() {
 
           {/* Left Side - Video Player */}
           <div className="h-full flex flex-col items-center justify-center bg-gray-50/30 border-r border-gray-200 p-8">
-            {/* Aspect Ratio Toggle - Rounded */}
             <div className="mb-6 flex bg-white border border-gray-200 rounded-xl p-1">
               <button
                 onClick={() => setIsPortrait(true)}
@@ -96,7 +95,6 @@ export default function Page() {
               </button>
             </div>
 
-            {/* Player Container */}
             <div className="relative w-full h-full max-h-[calc(100%-4rem)]">
               <div
                 style={{
@@ -136,7 +134,7 @@ export default function Page() {
           {/* Right Side - Transcript Editor */}
           <div className="h-full bg-white flex flex-col overflow-hidden rounded-l-3xl">
 
-            {/* Header - Rounded buttons */}
+            {/* Header */}
             <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200 shrink-0">
               <div className="flex items-center gap-2 bg-gray-100/50 p-1 rounded-xl">
                 <button
@@ -165,59 +163,20 @@ export default function Page() {
               </button>
             </div>
 
-            {/* Accuracy - Minimal */}
+            {/* Simple Summary Row */}
             <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 shrink-0 bg-gray-50/30">
-              <span className="text-xs text-gray-500 uppercase tracking-wider">Accuracy</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wider">Segments</span>
               <span className="text-xs font-medium text-black">
-                98.56%
+                {transcript.length} groups • {transcript.reduce((acc, g) => acc + (g.lines?.length || 0), 0)} lines
               </span>
             </div>
 
-            {/* Add Intro - Rounded corners */}
-            <div className="px-8 py-4 border-b border-gray-200 shrink-0">
-              <button className="w-full py-3 text-center text-xs text-gray-400 uppercase tracking-wider hover:text-black hover:bg-gray-50 transition-all border border-gray-200 border-dashed rounded-xl">
-                Add Intro
-              </button>
-            </div>
-
-            {/* Transcript List - Rounded hover states */}
-            <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1">
-              {transcript.map((segment, index) => (
-                <div
-                  key={index}
-                  className={`group flex items-start gap-6 px-6 py-4 rounded-xl hover:bg-gray-50 transition-colors ${segment.hidden ? 'opacity-40' : ''}`}
-                >
-                  <div className="w-16 shrink-0 pt-0.5">
-                    <span className="text-[10px] text-gray-400 font-mono tabular-nums tracking-wider">
-                      {segment.startTime?.toFixed(2)}–{segment.endTime?.toFixed(2)}
-                    </span>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm text-gray-900 leading-relaxed ${segment.hidden ? 'line-through text-gray-400' : ''}`}>
-                      {segment.text}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-2 hover:bg-white hover:shadow-sm rounded-lg hover:text-black text-gray-400 transition-all">
-                      <Plus className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleToggleVisibility(index)}
-                      className="p-2 hover:bg-white hover:shadow-sm rounded-lg hover:text-black text-gray-400 transition-all"
-                    >
-                      <EyeOff className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSegment(index)}
-                      className="p-2 hover:bg-red-50 rounded-lg hover:text-red-600 text-gray-400 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+            {/* Transcript Editor Component */}
+            <div className="flex-1 overflow-y-auto">
+              <TranscriptEditor
+                transcript={transcript}
+                setTranscript={setTranscript}
+              />
             </div>
           </div>
         </div>
