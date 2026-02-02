@@ -194,7 +194,7 @@ export default function Page() {
                 </button>
               </div>
 
-              {activeTab === 'style' ? (
+              {/* {activeTab === 'style' ? (
                 <button
                   onClick={() => setActiveTab('captions')}
                   className="flex items-center gap-2 px-5 py-2.5 bg-black text-white text-xs font-medium uppercase tracking-wider rounded-xl hover:bg-gray-800 transition-colors"
@@ -206,7 +206,7 @@ export default function Page() {
                   <Wand2 className="w-3.5 h-3.5" />
                   Generate Title
                 </button>
-              )}
+              )} */}
             </div>
 
             {activeTab === 'style' ? (
