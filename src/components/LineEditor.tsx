@@ -1,5 +1,6 @@
 import { Line, SubtitleGroup } from '../../types/subtitles';
 import { WordEditor } from './WordEditor';
+import { updateLineFontType } from '../utils/transcript';
 
 export const LineEditor: React.FC<{
     groupId: string;
@@ -8,29 +9,36 @@ export const LineEditor: React.FC<{
     setTranscript: (t: SubtitleGroup[]) => void;
 }> = ({ groupId, line, transcript, setTranscript }) => {
 
-    const getFontClass = (type: string) => {
-        switch (type) {
-            case 'bold': return 'font-bold text-gray-900';
-            case 'thin': return 'font-light text-gray-600';
-            case 'italic': return 'italic text-gray-700';
-            default: return 'font-normal text-gray-800';
-        }
+    const handleFontChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        // ✅ Cast the string to the specific union type
+        const newFontType = e.target.value as Line['font_type'];
+
+        setTranscript(
+            updateLineFontType(transcript, groupId, line.id, newFontType)
+        );
     };
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 p-4">
             {/* Line Header */}
             <div className="flex items-center justify-between mb-3">
-                <span className={`text-xs uppercase tracking-wider ${getFontClass(line.font_type)}`}>
-                    {line.font_type || 'normal'}
-                </span>
+                <select
+                    value={line.font_type || 'normal'}
+                    onChange={handleFontChange}
+                    className="text-xs uppercase tracking-wider bg-gray-50 border border-gray-200 
+                             rounded-lg px-2 py-1.5 focus:outline-none focus:border-black 
+                             hover:border-gray-400 transition-colors cursor-pointer font-medium"
+                >
+                    <option value="normal">Normal</option>
+                    <option value="bold">Bold</option>
+                    <option value="thin">Thin</option>
+                    <option value="italic">Italic</option>
+                </select>
+
                 <span className="text-[10px] text-gray-400 font-mono">
                     {line.start.toFixed(2)}s
                 </span>
             </div>
-
-            {/* Full text preview */}
-
 
             {/* Words */}
             <div className="flex flex-wrap gap-2">

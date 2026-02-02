@@ -72,7 +72,7 @@ function Navbar() {
 export default function Page() {
   const [transcript, setTranscript] = useState<SubtitleGroup[]>([]);
   const [activeTab, setActiveTab] = useState<'style' | 'captions'>('captions');
-  const [isPortrait, setIsPortrait] = useState(false);
+  const [isPortrait, setIsPortrait] = useState(true);
   const [selectedStyle, setSelectedStyle] = useState('basic');
 
   useEffect(() => {
@@ -96,7 +96,7 @@ export default function Page() {
 
           {/* Left Side - Video Player */}
           <div className="h-full flex flex-col items-center justify-center bg-gray-50/30 border-r border-gray-200 p-8">
-            <div className="mb-6 flex bg-white border border-gray-200 rounded-xl p-1">
+            {/* <div className="mb-6 flex bg-white border border-gray-200 rounded-xl p-1">
               <button
                 onClick={() => setIsPortrait(true)}
                 className={`flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${isPortrait ? 'bg-black text-white' : 'text-gray-500 hover:text-black'
@@ -113,7 +113,8 @@ export default function Page() {
                 <Monitor className="w-3.5 h-3.5" />
                 16:9
               </button>
-            </div>
+            </div> */}
+
 
             <div className="relative w-full h-full max-h-[calc(100%-4rem)]">
               <div
@@ -141,7 +142,15 @@ export default function Page() {
                 />
               </div>
             </div>
+            <button
+              onClick={() => setIsPortrait(false)}
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${!isPortrait ? 'bg-black text-white' : 'text-gray-500 hover:text-black'
+                }`}
+            >
+              Caption Position
+            </button>
           </div>
+
 
           {/* Right Side - Rest of your UI */}
           {/* Right Side - Rest of your UI */}
