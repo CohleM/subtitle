@@ -1,3 +1,4 @@
+// src/remotion/Subtitles/ThreeLines.tsx
 import React, { useMemo, useState, useEffect } from 'react';
 import {
     AbsoluteFill,
@@ -9,53 +10,54 @@ import {
     continueRender,
     spring
 } from 'remotion';
+import { SubtitleGroup, Line } from '../../../types/subtitles';
+import { SubtitleStyleConfig, FontStyleDefinition } from '../../../types/style';
 
-// Import Google Fonts
-import { loadFont as loadInter } from '@remotion/google-fonts/Poppins';
-import { loadFont as loadMontserrat } from '@remotion/google-fonts/Poppins';
+// Pre-load common fonts to avoid delayRender issues
+import { loadFont as loadInter } from '@remotion/google-fonts/Inter';
 import { loadFont as loadBebas } from '@remotion/google-fonts/BebasNeue';
-import { loadFont as loadPlayfair } from '@remotion/google-fonts/PlayfairDisplay'; // Added for italic
-import { SubtitleGroup, Line, Word } from '../../../types/subtitles';
+import { loadFont as loadPoppins } from '@remotion/google-fonts/Poppins';
+import { loadFont as loadMontserrat } from '@remotion/google-fonts/Montserrat';
+import { loadFont as loadOswald } from '@remotion/google-fonts/Oswald';
+
+// Initialize fonts
+loadInter();
+loadBebas();
+loadPoppins();
+loadMontserrat();
+loadOswald();
 
 const LINE_SPACING = 0;
 
-// Initialize fonts
-const inter = loadInter();
-const montserrat = loadMontserrat();
-const bebas = loadBebas();
-const playfair = loadPlayfair(); // Initialize italic font
+// Get font styles from config safely
+const getFontStyle = (config: SubtitleStyleConfig, fontType: string): FontStyleDefinition => {
+    const defaultStyle: FontStyleDefinition = {
+        fontSize: 60,
+        fontWeight: 400,
+        fontFamily: 'Arial',
+        color: '#ffffff'
+    };
 
-// Font type mapping
-const FONT_TYPE_MAP: Record<string, { fontSize: number; fontWeight: number; fontFamily: string; fontStyle?: string }> = {
-    'bold': { fontSize: 120, fontWeight: 800, fontFamily: bebas.fontFamily },
-    'thin': { fontSize: 50, fontWeight: 100, fontFamily: inter.fontFamily },
-    'normal': { fontSize: 60, fontWeight: 400, fontFamily: montserrat.fontFamily },
-    'italic': { fontSize: 60, fontWeight: 200, fontFamily: inter.fontFamily, fontStyle: 'italic' }, // Added italic
+    return config.fonts[fontType as keyof typeof config.fonts] || defaultStyle;
 };
 
-const DEFAULT_STYLE = { fontSize: 60, fontFamily: 'Arial, sans-serif', fontWeight: 800 };
-
-// Get all unique font styles for loading
-const getAllFontStyles = () => {
-    return Object.values(FONT_TYPE_MAP);
-};
-
-// Hook to wait for Google Fonts to load with their specific weights
-const useFontsLoaded = () => {
+// Hook to wait for Google Fonts to load based on config
+const useFontsLoaded = (config: SubtitleStyleConfig) => {
     const [loaded, setLoaded] = useState(false);
     const [handle] = useState(() => delayRender('Loading Google Fonts'));
 
     useEffect(() => {
         const loadAllFonts = async () => {
-            // Load each font with its specific weight and size
-            const fontStyles = getAllFontStyles();
-            const fontPromises = fontStyles.map(style => {
-                const fontStyle = style.fontStyle || 'normal';
-                return document.fonts.load(`${fontStyle} ${style.fontWeight} ${style.fontSize}px "${style.fontFamily}"`);
-            });
+            const fontStyles = Object.values(config.fonts);
 
             try {
-                await Promise.all(fontPromises);
+                await Promise.all(
+                    fontStyles.map(style =>
+                        document.fonts.load(
+                            `${style.fontStyle || 'normal'} ${style.fontWeight} ${style.fontSize}px "${style.fontFamily}"`
+                        )
+                    )
+                );
                 setLoaded(true);
                 continueRender(handle);
             } catch (err) {
@@ -66,37 +68,34 @@ const useFontsLoaded = () => {
         };
 
         loadAllFonts();
-    }, [handle]);
+    }, [config, handle]);
 
     return loaded;
 };
 
-// Measure actual rendered height of text content (including wrapped lines)
+// Measure actual rendered height of text content
 const measureActualTextHeight = (
     text: string,
-    fontSize: number,
-    fontFamily: string,
-    fontWeight: number,
-    containerWidth: number,
-    fontStyle: string = 'normal' // Added fontStyle parameter
+    style: FontStyleDefinition,
+    containerWidth: number
 ): number => {
     const tempDiv = document.createElement('div');
     tempDiv.style.position = 'absolute';
     tempDiv.style.visibility = 'hidden';
-    tempDiv.style.fontSize = `${fontSize}px`;
-    tempDiv.style.fontFamily = `"${fontFamily}", sans-serif`;
-    tempDiv.style.fontWeight = String(fontWeight);
-    tempDiv.style.fontStyle = fontStyle; // Added fontStyle
+    tempDiv.style.fontSize = `${style.fontSize}px`;
+    tempDiv.style.fontFamily = `"${style.fontFamily}", sans-serif`;
+    tempDiv.style.fontWeight = String(style.fontWeight);
+    tempDiv.style.fontStyle = style.fontStyle || 'normal';
     tempDiv.style.lineHeight = '1.0';
     tempDiv.style.width = `${containerWidth}px`;
     tempDiv.style.display = 'flex';
     tempDiv.style.flexWrap = 'wrap';
     tempDiv.style.justifyContent = 'center';
     tempDiv.style.alignItems = 'baseline';
+    tempDiv.style.textTransform = style.uppercase ? 'uppercase' : 'none';
 
-    // Add words with spacing
     const words = text.split(' ');
-    words.forEach((word, idx) => {
+    words.forEach((word) => {
         const span = document.createElement('span');
         span.style.display = 'inline-block';
         span.style.marginRight = '0.3em';
@@ -111,31 +110,53 @@ const measureActualTextHeight = (
     return height;
 };
 
-const calculateLinePositions = (lines: Line[], containerWidth: number): number[] => {
+const calculateLinePositions = (
+    lines: Line[],
+    config: SubtitleStyleConfig,
+    containerWidth: number
+): number[] => {
     if (lines.length === 0) return [];
 
     const lineHeights = lines.map((line) => {
-        const style = FONT_TYPE_MAP[line.font_type] || DEFAULT_STYLE;
+        const style = getFontStyle(config, line.font_type);
         const text = line.words.map(w => w.word).join(' ');
-        return measureActualTextHeight(
-            text,
-            style.fontSize,
-            style.fontFamily,
-            style.fontWeight,
-            containerWidth,
-            style.fontStyle || 'normal' // Pass fontStyle
-        );
+        return measureActualTextHeight(text, style, containerWidth);
     });
 
-    const offsets: number[] = [0]; // First line at top (translateY(0))
+    const offsets: number[] = [0];
 
     for (let i = 1; i < lines.length; i++) {
         const previousHeight = lineHeights[i - 1];
         const previousOffset = offsets[i - 1];
-        // Stack downward: previous position plus its height plus spacing
         offsets.push(previousOffset + previousHeight + LINE_SPACING);
     }
     return offsets;
+};
+
+// Build text shadow based on shadow settings
+const buildTextShadow = (style: FontStyleDefinition): string => {
+    const shadows: string[] = ['3px 3px 6px rgba(0,0,0,0.9)']; // Default shadow
+
+    if (style.shadow && style.shadow !== 'none') {
+        const blur = style.shadow === 'small' ? 10 : style.shadow === 'medium' ? 20 : 30;
+        const color = style.shadowColor || style.color || '#ffffff';
+        shadows.push(`0 0 ${blur}px ${color}`);
+    }
+
+    if (style.strokeWeight && style.strokeWeight !== 'none') {
+        const width = style.strokeWeight === 'small' ? 1 : style.strokeWeight === 'medium' ? 2 : 3;
+        const color = style.strokeColor || '#000000';
+        // Create outline effect using multiple shadows
+        for (let x = -width; x <= width; x++) {
+            for (let y = -width; y <= width; y++) {
+                if (x !== 0 || y !== 0) {
+                    shadows.push(`${x}px ${y}px 0 ${color}`);
+                }
+            }
+        }
+    }
+
+    return shadows.join(', ');
 };
 
 const WordText: React.FC<{
@@ -151,30 +172,17 @@ const WordText: React.FC<{
     const wordStartFrame = Math.round(relativeWordStart * fps);
     const animationFrame = Math.max(0, frame - wordStartFrame);
 
-    // Spring animation for smooth entrance
     const springValue = spring({
         frame: animationFrame,
         fps,
         config: {
             damping: 100,
             stiffness: 100,
-            // mass: 0.5,
         },
     });
 
-    // Animate from below (50px down) to current position
-    const translateY = interpolate(
-        springValue,
-        [0, 1],
-        [50, 0]
-    );
-
-    // Fade in opacity during the movement
-    const opacity = interpolate(
-        springValue,
-        [0, 1],
-        [0, 1]
-    );
+    const translateY = interpolate(springValue, [0, 1], [50, 0]);
+    const opacity = interpolate(springValue, [0, 1], [0, 1]);
 
     return (
         <span
@@ -195,20 +203,17 @@ const LineText: React.FC<{
     line: Line;
     lineIndex: number;
     translateYOffset: number;
-    fontType: string;
-    captionPadding?: number; // ✅ Add
-}> = ({ line, lineIndex, translateYOffset, fontType, captionPadding = 540 }) => {
-    const style = FONT_TYPE_MAP[fontType] || DEFAULT_STYLE;
-
-    console.log('translateYOffset:', translateYOffset);
-    console.log('fontType:', fontType, 'style:', style);
+    style: FontStyleDefinition;
+    captionPadding: number;
+}> = ({ line, lineIndex, translateYOffset, style, captionPadding }) => {
+    const textShadow = buildTextShadow(style);
 
     return (
         <AbsoluteFill
             style={{
                 justifyContent: 'flex-start',
                 alignItems: 'center',
-                paddingTop: captionPadding
+                paddingTop: captionPadding,
             }}
         >
             <div
@@ -217,15 +222,19 @@ const LineText: React.FC<{
                     fontSize: style.fontSize,
                     fontFamily: `"${style.fontFamily}", sans-serif`,
                     fontWeight: style.fontWeight,
-                    fontStyle: style.fontStyle || 'normal', // Added fontStyle
-                    color: 'white',
+                    fontStyle: style.fontStyle || 'normal',
+                    color: style.color || '#ffffff',
                     textAlign: 'center',
-                    textShadow: '3px 3px 6px rgba(0,0,0,0.9)',
+                    textShadow: textShadow,
                     lineHeight: 1.0,
                     display: 'flex',
                     flexWrap: 'wrap',
                     justifyContent: 'center',
                     alignItems: 'baseline',
+                    textTransform: style.uppercase ? 'uppercase' : 'none',
+                    WebkitTextStroke: style.strokeWeight && style.strokeWeight !== 'none'
+                        ? `${style.strokeWeight === 'small' ? 1 : style.strokeWeight === 'medium' ? 2 : 3}px ${style.strokeColor || '#000000'}`
+                        : undefined,
                 }}
             >
                 {line.words.map((word, wordIndex) => (
@@ -242,9 +251,19 @@ const LineText: React.FC<{
     );
 };
 
-export const ThreeLines: React.FC<{ group: SubtitleGroup, captionPadding?: number }> = ({ group, captionPadding = 540 }) => {
+type ThreeLinesProps = {
+    group: SubtitleGroup;
+    config: SubtitleStyleConfig;
+    captionPadding?: number;
+};
+
+export const ThreeLines: React.FC<ThreeLinesProps> = ({
+    group,
+    config,
+    captionPadding = 540
+}) => {
     const { fps, width } = useVideoConfig();
-    const fontsLoaded = useFontsLoaded();
+    const fontsLoaded = useFontsLoaded(config);
 
     if (!group?.lines?.length) {
         console.error('Invalid group data:', group);
@@ -252,10 +271,11 @@ export const ThreeLines: React.FC<{ group: SubtitleGroup, captionPadding?: numbe
     }
 
     const containerWidth = width * 0.9;
+
     const lineOffsets = useMemo(() => {
         if (!fontsLoaded) return [];
-        return calculateLinePositions(group.lines, containerWidth);
-    }, [group.lines, fontsLoaded, containerWidth]);
+        return calculateLinePositions(group.lines, config, containerWidth);
+    }, [group.lines, config, fontsLoaded, containerWidth]);
 
     if (!fontsLoaded || lineOffsets.length === 0) {
         return null;
@@ -266,6 +286,7 @@ export const ThreeLines: React.FC<{ group: SubtitleGroup, captionPadding?: numbe
             {group.lines.map((line, lineIndex) => {
                 const relativeStart = line.start - group.start;
                 const from = Math.round(relativeStart * fps);
+                const fontStyle = getFontStyle(config, line.font_type);
 
                 return (
                     <Sequence
@@ -276,7 +297,7 @@ export const ThreeLines: React.FC<{ group: SubtitleGroup, captionPadding?: numbe
                             line={line}
                             lineIndex={lineIndex}
                             translateYOffset={lineOffsets[lineIndex]}
-                            fontType={line.font_type}
+                            style={fontStyle}
                             captionPadding={captionPadding}
                         />
                     </Sequence>

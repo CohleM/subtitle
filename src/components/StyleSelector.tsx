@@ -1,8 +1,8 @@
-// src/app/components/StyleSelector.tsx
+// src/components/StyleSelector.tsx
 'use client';
 
 import { SubtitleStyle } from '../../types/style';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Pencil } from 'lucide-react';
 import { useState } from 'react';
 
 const styles: SubtitleStyle[] = [
@@ -31,24 +31,28 @@ const categories = ['All', 'Trend', 'New', 'Premium', 'Emoji', 'Speakers'] as co
 export const StyleSelector: React.FC<{
     selectedStyle: string;
     onStyleSelect: (styleId: string) => void;
-}> = ({ selectedStyle, onStyleSelect }) => {
+    onEditStyle?: (styleId: string) => void;
+}> = ({ selectedStyle, onStyleSelect, onEditStyle }) => {
     const [activeCategory, setActiveCategory] = useState<typeof categories[number]>('All');
+    const [hoveredStyle, setHoveredStyle] = useState<string | null>(null);
 
     const filteredStyles = activeCategory === 'All'
         ? styles
         : styles.filter(s => s.category === activeCategory);
 
+    const isSelected = (styleId: string) => selectedStyle === styleId;
+
     return (
         <div className="h-full flex flex-col bg-gray-50/30">
-            {/* Category Tabs - SMALLER FONT */}
-            <div className="flex items-center gap-1 px-8 py-4 border-b border-gray-200 bg-white shrink-0">
+            {/* Category Tabs */}
+            <div className="flex items-center gap-1 px-8 py-4 border-b border-gray-200 bg-white shrink-0 overflow-x-auto">
                 {categories.map((cat) => (
                     <button
                         key={cat}
                         onClick={() => setActiveCategory(cat)}
-                        className={`px-4 py-1.5 text-[10px] font-medium uppercase tracking-wider rounded-lg transition-all ${activeCategory === cat
-                            ? 'bg-black text-white'
-                            : 'text-gray-500 hover:text-black hover:bg-gray-100'
+                        className={`px-4 py-1.5 text-[10px] font-medium uppercase tracking-wider rounded-lg transition-all whitespace-nowrap ${activeCategory === cat
+                                ? 'bg-black text-white'
+                                : 'text-gray-500 hover:text-black hover:bg-gray-100'
                             }`}
                     >
                         {cat}
@@ -56,49 +60,79 @@ export const StyleSelector: React.FC<{
                 ))}
             </div>
 
-            {/* Styles Grid - SMALLER FONT */}
+            {/* Styles Grid */}
             <div className="flex-1 overflow-y-auto p-8">
                 <div className="grid grid-cols-3 gap-4">
-                    {filteredStyles.map((style) => (
-                        <button
-                            key={style.id}
-                            onClick={() => onStyleSelect(style.id)}
-                            className={`relative group aspect-video bg-gray-200 rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] ${selectedStyle === style.id
-                                ? 'border-black ring-2 ring-black ring-offset-2'
-                                : 'border-transparent hover:border-gray-300'
-                                }`}
-                        >
-                            {/* Preview Placeholder - SMALLER TEXT */}
-                            <div className="absolute inset-0 flex items-center justify-center bg-gray-300 group-hover:bg-gray-200 transition-colors">
-                                <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
-                                    {style.name}
-                                </span>
-                            </div>
+                    {filteredStyles.map((style) => {
+                        const selected = isSelected(style.id);
+                        const isHovered = hoveredStyle === style.id;
 
-                            {/* Badges - SMALLER TOO */}
-                            <div className="absolute top-3 left-3 flex gap-2">
-                                {style.isNew && (
-                                    <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold uppercase tracking-wider rounded">
-                                        New
-                                    </span>
-                                )}
-                                {style.isPremium && (
-                                    <Sparkles className="w-3 h-3 text-orange-500 fill-orange-500" />
-                                )}
-                            </div>
-
-                            {/* Selected Indicator - SMALLER CHECK ICON */}
-                            {selectedStyle === style.id && (
-                                <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
-                                    <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white">
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                        </svg>
+                        return (
+                            <div
+                                key={style.id}
+                                className="relative aspect-video"
+                                onMouseEnter={() => setHoveredStyle(style.id)}
+                                onMouseLeave={() => setHoveredStyle(null)}
+                            >
+                                {/* Main Card Button */}
+                                <button
+                                    onClick={() => onStyleSelect(style.id)}
+                                    className={`w-full h-full relative group bg-gray-200 rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] ${selected
+                                            ? 'border-black ring-2 ring-black ring-offset-2'
+                                            : 'border-transparent hover:border-gray-300'
+                                        }`}
+                                >
+                                    {/* Preview Placeholder */}
+                                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-300 group-hover:from-gray-200 group-hover:to-gray-300 transition-colors">
+                                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                            {style.name}
+                                        </span>
                                     </div>
-                                </div>
-                            )}
-                        </button>
-                    ))}
+
+                                    {/* Badges */}
+                                    <div className="absolute top-3 left-3 flex gap-2">
+                                        {style.isNew && (
+                                            <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold uppercase tracking-wider rounded shadow-sm">
+                                                New
+                                            </span>
+                                        )}
+                                        {style.isPremium && (
+                                            <div className="w-5 h-5 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm">
+                                                <Sparkles className="w-3 h-3 text-orange-500 fill-orange-500" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Selected Checkmark (Top Right) */}
+                                    {selected && (
+                                        <div className="absolute top-3 right-3 w-6 h-6 bg-black rounded-full flex items-center justify-center text-white shadow-lg">
+                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                    )}
+                                </button>
+
+                                {/* Edit Button - Appears on hover when selected */}
+                                {selected && isHovered && onEditStyle && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onEditStyle(style.id);
+                                        }}
+                                        className="absolute inset-0 bg-black/60 backdrop-blur-[2px] rounded-2xl flex flex-col items-center justify-center gap-2 transition-all cursor-pointer z-10"
+                                    >
+                                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform">
+                                            <Pencil className="w-5 h-5 text-black" />
+                                        </div>
+                                        <span className="text-white text-xs font-medium uppercase tracking-wider">
+                                            Customize Style
+                                        </span>
+                                    </button>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </div>

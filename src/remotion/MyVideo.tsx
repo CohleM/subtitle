@@ -2,16 +2,18 @@ import { AbsoluteFill, Sequence, useVideoConfig, Html5Audio, staticFile, Html5Vi
 import { SubtitleGroup } from '../../types/subtitles';
 import { ThreeLines } from './Subtitles/ThreeLines';
 import { StyleRenderer } from './StyleRenderer';
+import { SubtitleStyleConfig } from '../../types/style';
 
 type MainProps = {
     groups: SubtitleGroup[];
     style?: string;
-    captionPadding?: number; // ✅ Add
+    captionPadding?: number;
+    customStyleConfigs?: Record<string, SubtitleStyleConfig>;
 };
 
 
 
-export const MyVideo: React.FC<MainProps> = ({ groups, style = 'basic', captionPadding }) => {
+export const MyVideo: React.FC<MainProps> = ({ groups, style = 'basic', captionPadding, customStyleConfigs }) => {
     const { fps } = useVideoConfig();
 
     return (
@@ -32,7 +34,7 @@ export const MyVideo: React.FC<MainProps> = ({ groups, style = 'basic', captionP
                         from={from}
                         durationInFrames={durationInFrames}
                     >
-                        <StyleRenderer group={group} style={style} captionPadding={captionPadding} />
+                        <StyleRenderer group={group} style={style} captionPadding={captionPadding} customConfigs={customStyleConfigs} />
                     </Sequence>
                 );
             })}

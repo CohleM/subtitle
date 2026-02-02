@@ -8,27 +8,32 @@ import { SubtitleGroup } from '../../types/subtitles';
 import { Main } from '../remotion/Main';
 import { TranscriptEditor } from '../components/TranscriptEditor';
 import { StyleSelector } from '../components/StyleSelector';
-
+import { SubtitleStyleConfig } from '../../types/style';
+import { defaultStyleConfigs } from '../config/styleConfigs';
+import { StyleEditor } from '../components/StyleEditor';
 // ✅ Extract Player into its own memoized component
 const VideoPlayer = memo(function VideoPlayer({
   transcript,
   selectedStyle,
   compositionWidth,
   compositionHeight,
-  captionPadding
+  captionPadding,
+  customStyleConfigs
 }: {
   transcript: SubtitleGroup[];
   selectedStyle: string;
   compositionWidth: number;
   compositionHeight: number;
   captionPadding: number;
+  customStyleConfigs?: Record<string, SubtitleStyleConfig>;
 }) {
   // ✅ Memoize inputProps - only changes when transcript or style actually changes
   const inputProps = useMemo(() => ({
     transcript,
     style: selectedStyle,
-    captionPadding
-  }), [transcript, selectedStyle, captionPadding]);
+    captionPadding,
+    customStyleConfigs // Include in memo
+  }), [transcript, selectedStyle, captionPadding, customStyleConfigs]);
 
   return (
     <div className="w-full h-full bg-black overflow-hidden rounded-3xl border border-gray-200">
@@ -75,8 +80,10 @@ function Navbar() {
 export default function Page() {
   const [transcript, setTranscript] = useState<SubtitleGroup[]>([]);
   const [activeTab, setActiveTab] = useState<'style' | 'captions'>('captions');
-  const [isPortrait, setIsPortrait] = useState(true);
+  const [isPortrait, setIsPortrait] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState('basic');
+  const [editingStyle, setEditingStyle] = useState<string | null>(null); // New state
+  const [customConfigs, setCustomConfigs] = useState<Record<string, SubtitleStyleConfig>>({}); // New state
 
   useEffect(() => {
     setTranscript(transcriptJson as SubtitleGroup[]);
@@ -92,6 +99,16 @@ export default function Page() {
     setTranscript(newTranscript);
   };
 
+  const currentStyleConfig = useMemo(() => {
+    return customConfigs[selectedStyle] || defaultStyleConfigs[selectedStyle];
+  }, [customConfigs, selectedStyle]);
+
+  const handleStyleUpdate = (config: SubtitleStyleConfig) => {
+    setCustomConfigs(prev => ({
+      ...prev,
+      [config.id]: config
+    }));
+  };
   return (
     <div className="h-screen w-full bg-white flex flex-col overflow-hidden">
       <Navbar />
@@ -145,6 +162,7 @@ export default function Page() {
                   compositionWidth={compositionWidth}
                   compositionHeight={compositionHeight}
                   captionPadding={captionPadding} // ✅ Pass to player
+                  customStyleConfigs={customConfigs} // Pass this
                 />
               </div>
             </div>
@@ -170,66 +188,48 @@ export default function Page() {
           {/* Right Side - Rest of your UI */}
           {/* Right Side - Rest of your UI */}
           <div className="h-full bg-white flex flex-col overflow-hidden rounded-l-3xl">
-
-            {/* ✅ ADD THIS HEADER BACK */}
-            <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200 shrink-0">
-              <div className="flex items-center gap-2 bg-gray-100/50 p-1 rounded-xl">
-                <button
-                  onClick={() => setActiveTab('style')}
-                  className={`px-5 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${activeTab === 'style'
-                    ? 'bg-white text-black'
-                    : 'text-gray-400 hover:text-gray-600'
-                    }`}
-                >
-                  Style
-                </button>
-                <button
-                  onClick={() => setActiveTab('captions')}
-                  className={`px-5 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${activeTab === 'captions'
-                    ? 'bg-white text-black'
-                    : 'text-gray-400 hover:text-gray-600'
-                    }`}
-                >
-                  Captions
-                </button>
-              </div>
-
-              {/* {activeTab === 'style' ? (
-                <button
-                  onClick={() => setActiveTab('captions')}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-black text-white text-xs font-medium uppercase tracking-wider rounded-xl hover:bg-gray-800 transition-colors"
-                >
-                  Customize {selectedStyle}
-                </button>
-              ) : (
-                <button className="flex items-center gap-2 px-5 py-2.5 bg-black text-white text-xs font-medium uppercase tracking-wider rounded-xl hover:bg-gray-800 transition-colors">
-                  <Wand2 className="w-3.5 h-3.5" />
-                  Generate Title
-                </button>
-              )} */}
-            </div>
-
-            {activeTab === 'style' ? (
-              <StyleSelector
-                selectedStyle={selectedStyle}
-                onStyleSelect={setSelectedStyle}
+            {editingStyle ? (
+              <StyleEditor
+                config={customConfigs[editingStyle] || defaultStyleConfigs[editingStyle]}
+                onChange={handleStyleUpdate}
+                onBack={() => setEditingStyle(null)}
               />
             ) : (
               <>
-                {/* Summary Row */}
-                <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 shrink-0 bg-gray-50/30">
-                  <span className="text-xs text-gray-500 uppercase tracking-wider">Segments</span>
-                  <span className="text-xs font-medium text-black">
-                    {transcript.length} groups • {transcript.reduce((acc, g) => acc + (g.lines?.length || 0), 0)} lines
-                  </span>
+                <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200 shrink-0">
+                  <div className="flex items-center gap-2 bg-gray-100/50 p-1 rounded-xl">
+                    <button
+                      onClick={() => setActiveTab('style')}
+                      className={`px-5 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${activeTab === 'style' ? 'bg-white text-black' : 'text-gray-400'
+                        }`}
+                    >
+                      Style
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('captions')}
+                      className={`px-5 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${activeTab === 'captions' ? 'bg-white text-black' : 'text-gray-400'
+                        }`}
+                    >
+                      Captions
+                    </button>
+                  </div>
                 </div>
-                <div className="flex-1 overflow-y-auto">
-                  <TranscriptEditor
-                    transcript={transcript}
-                    setTranscript={setTranscript}
-                    onDelete={handleDeleteSegment}
+
+                {activeTab === 'style' ? (
+                  <StyleSelector
+                    selectedStyle={selectedStyle}
+                    onStyleSelect={setSelectedStyle}
+                    onEditStyle={setEditingStyle} // Pass this
                   />
-                </div>
+                ) : (
+                  <div className="flex-1 overflow-y-auto min-h-0">
+                    <TranscriptEditor
+                      transcript={transcript}
+                      setTranscript={setTranscript}
+                      onDelete={handleDeleteSegment}
+                    />
+                  </div>
+                )}
               </>
             )}
           </div>
