@@ -80,7 +80,7 @@ function Navbar() {
 export default function Page() {
   const [transcript, setTranscript] = useState<SubtitleGroup[]>([]);
   const [activeTab, setActiveTab] = useState<'style' | 'captions'>('captions');
-  const [isPortrait, setIsPortrait] = useState(false);
+  const [isPortrait, setIsPortrait] = useState(true);
   const [selectedStyle, setSelectedStyle] = useState('basic');
   const [editingStyle, setEditingStyle] = useState<string | null>(null); // New state
   const [customConfigs, setCustomConfigs] = useState<Record<string, SubtitleStyleConfig>>({}); // New state
