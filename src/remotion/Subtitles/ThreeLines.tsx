@@ -196,7 +196,8 @@ const LineText: React.FC<{
     lineIndex: number;
     translateYOffset: number;
     fontType: string;
-}> = ({ line, lineIndex, translateYOffset, fontType }) => {
+    captionPadding?: number; // ✅ Add
+}> = ({ line, lineIndex, translateYOffset, fontType, captionPadding = 540 }) => {
     const style = FONT_TYPE_MAP[fontType] || DEFAULT_STYLE;
 
     console.log('translateYOffset:', translateYOffset);
@@ -207,7 +208,7 @@ const LineText: React.FC<{
             style={{
                 justifyContent: 'flex-start',
                 alignItems: 'center',
-                paddingTop: 540
+                paddingTop: captionPadding
             }}
         >
             <div
@@ -241,7 +242,7 @@ const LineText: React.FC<{
     );
 };
 
-export const ThreeLines: React.FC<{ group: SubtitleGroup }> = ({ group }) => {
+export const ThreeLines: React.FC<{ group: SubtitleGroup, captionPadding?: number }> = ({ group, captionPadding = 540 }) => {
     const { fps, width } = useVideoConfig();
     const fontsLoaded = useFontsLoaded();
 
@@ -276,6 +277,7 @@ export const ThreeLines: React.FC<{ group: SubtitleGroup }> = ({ group }) => {
                             lineIndex={lineIndex}
                             translateYOffset={lineOffsets[lineIndex]}
                             fontType={line.font_type}
+                            captionPadding={captionPadding}
                         />
                     </Sequence>
                 );

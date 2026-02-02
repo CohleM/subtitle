@@ -6,16 +6,18 @@ import { GroupText } from './Subtitles/GroupText';
 type StyleRendererProps = {
     group: SubtitleGroup;
     style?: string;
+    captionPadding?: number; // ✅ Add
 };
 
-export const StyleRenderer: React.FC<StyleRendererProps> = ({ group, style = 'basic' }) => {
+
+export const StyleRenderer: React.FC<StyleRendererProps> = ({ group, style = 'basic', captionPadding = 540 }) => {
 
     console.log('style', style)
     // Simple switch statement - easy to extend
     switch (style) {
         case 'matt':
             // return <MattStyle group={group} />;
-            return <ThreeLines group={group} />; // Fallback until you create MattStyle
+            return <ThreeLines group={group} captionPadding={captionPadding} />; // Fallback until you create MattStyle
 
         case 'jess':
             // return <JessStyle group={group} />;

@@ -14,18 +14,21 @@ const VideoPlayer = memo(function VideoPlayer({
   transcript,
   selectedStyle,
   compositionWidth,
-  compositionHeight
+  compositionHeight,
+  captionPadding
 }: {
   transcript: SubtitleGroup[];
   selectedStyle: string;
   compositionWidth: number;
   compositionHeight: number;
+  captionPadding: number;
 }) {
   // ✅ Memoize inputProps - only changes when transcript or style actually changes
   const inputProps = useMemo(() => ({
     transcript,
-    style: selectedStyle
-  }), [transcript, selectedStyle]);
+    style: selectedStyle,
+    captionPadding
+  }), [transcript, selectedStyle, captionPadding]);
 
   return (
     <div className="w-full h-full bg-black overflow-hidden rounded-3xl border border-gray-200">
@@ -81,6 +84,8 @@ export default function Page() {
 
   const compositionWidth = isPortrait ? 1080 : 1920;
   const compositionHeight = isPortrait ? 1920 : 1080;
+
+  const [captionPadding, setCaptionPadding] = useState(540); // Add this
 
   const handleDeleteSegment = (index: number) => {
     const newTranscript = transcript.filter((_, i) => i !== index);
@@ -139,16 +144,26 @@ export default function Page() {
                   selectedStyle={selectedStyle}
                   compositionWidth={compositionWidth}
                   compositionHeight={compositionHeight}
+                  captionPadding={captionPadding} // ✅ Pass to player
                 />
               </div>
             </div>
-            <button
-              onClick={() => setIsPortrait(false)}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${!isPortrait ? 'bg-black text-white' : 'text-gray-500 hover:text-black'
-                }`}
-            >
-              Caption Position
-            </button>
+            <div className="mt-6 flex items-center gap-4 w-full max-w-sm bg-white border border-gray-200 rounded-xl px-4 py-3">
+              <span className="text-xs font-medium uppercase tracking-wider text-gray-500 shrink-0">
+                Position
+              </span>
+              <input
+                type="range"
+                min="0"
+                max={compositionHeight}
+                value={captionPadding}
+                onChange={(e) => setCaptionPadding(Number(e.target.value))}
+                className="flex-1 h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer accent-black hover:bg-gray-300 transition-colors"
+              />
+              <span className="text-[10px] font-mono text-gray-600 w-10 text-right">
+                {captionPadding}px
+              </span>
+            </div>
           </div>
 
 

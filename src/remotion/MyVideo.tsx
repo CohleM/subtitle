@@ -6,10 +6,12 @@ import { StyleRenderer } from './StyleRenderer';
 type MainProps = {
     groups: SubtitleGroup[];
     style?: string;
+    captionPadding?: number; // ✅ Add
 };
 
 
-export const MyVideo: React.FC<MainProps> = ({ groups, style = 'basic' }) => {
+
+export const MyVideo: React.FC<MainProps> = ({ groups, style = 'basic', captionPadding }) => {
     const { fps } = useVideoConfig();
 
     return (
@@ -30,7 +32,7 @@ export const MyVideo: React.FC<MainProps> = ({ groups, style = 'basic' }) => {
                         from={from}
                         durationInFrames={durationInFrames}
                     >
-                        <StyleRenderer group={group} style={style} />
+                        <StyleRenderer group={group} style={style} captionPadding={captionPadding} />
                     </Sequence>
                 );
             })}
