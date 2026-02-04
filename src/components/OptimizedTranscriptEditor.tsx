@@ -172,7 +172,7 @@ export const OptimizedTranscriptEditor: React.FC<{
     const handleLineClick = useCallback((line: FlatLine) => {
         setEditingLine(line);
     }, []);
-
+    // In OptimizedTranscriptEditor.tsx - Modify handleSave
     const handleSave = useCallback((lineId: string, groupId: string, newText: string, newFontType: Line['font_type']) => {
         const wordsArray = newText.trim().split(/\s+/).filter(Boolean);
 
@@ -187,6 +187,9 @@ export const OptimizedTranscriptEditor: React.FC<{
                     const duration = line.end - line.start;
                     const wordDuration = duration / wordsArray.length;
 
+                    // ✅ Preserve existing word IDs where possible to maintain React key stability
+                    const existingWords = line.words;
+
                     return {
                         ...line,
                         font_type: newFontType,
@@ -194,7 +197,8 @@ export const OptimizedTranscriptEditor: React.FC<{
                             word: w,
                             start: line.start + i * wordDuration,
                             end: line.start + (i + 1) * wordDuration,
-                            id: `${line.id}-w${i}`,
+                            // ✅ Reuse existing ID if available, only generate new for new words
+                            id: existingWords[i]?.id || `${line.id}-w${i}-${Date.now()}`,
                         })),
                         text: newText
                     };
