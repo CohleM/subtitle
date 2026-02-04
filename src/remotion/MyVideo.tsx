@@ -1,8 +1,9 @@
-import { AbsoluteFill, Sequence, useVideoConfig, Html5Audio, staticFile, Html5Video } from 'remotion';
+// src/remotion/MyVideo.tsx - IMPROVED VERSION
+import { AbsoluteFill, Sequence, useVideoConfig, Html5Video, staticFile } from 'remotion';
 import { SubtitleGroup } from '../../types/subtitles';
-import { ThreeLines } from './Subtitles/ThreeLines';
 import { StyleRenderer } from './StyleRenderer';
 import { SubtitleStyleConfig } from '../../types/style';
+import { memo, useMemo } from 'react';
 
 type MainProps = {
     groups: SubtitleGroup[];
@@ -11,35 +12,52 @@ type MainProps = {
     customStyleConfigs?: Record<string, SubtitleStyleConfig>;
 };
 
-
-
-export const MyVideo: React.FC<MainProps> = ({ groups, style = 'basic', captionPadding, customStyleConfigs }) => {
+// ✅ Memoize the entire component to prevent unnecessary re-renders
+export const MyVideo: React.FC<MainProps> = memo(({
+    groups,
+    style = 'basic',
+    captionPadding = 540,
+    customStyleConfigs
+}) => {
     const { fps } = useVideoConfig();
+
+    // ✅ Stable sequence calculations - only recalculate when groups actually change
+    const sequences = useMemo(() => {
+        return groups.map((group, index) => {
+            const from = Math.max(0, Math.round(group.start * fps));
+            const nextStart = groups[index + 1]?.start;
+            const toSeconds = nextStart ?? group.end;
+            const to = Math.max(from + 1, Math.round(toSeconds * fps));
+            const durationInFrames = to - from;
+
+            return {
+                key: group.id, // Keep stable ID
+                from,
+                durationInFrames,
+                group,
+            };
+        });
+    }, [groups, fps]);
 
     return (
         <AbsoluteFill style={{ background: 'black' }}>
-            {groups.map((group, index) => {
-                const from = Math.max(0, Math.round(group.start * fps));
-
-                // take NEXT group's start, fallback to current group's end
-                const nextStart = groups[index + 1]?.start;
-                const toSeconds = nextStart ?? group.end;
-
-                const to = Math.max(from + 1, Math.round(toSeconds * fps));
-                const durationInFrames = to - from;
-
-                return (
-                    <Sequence
-                        key={group.id}
-                        from={from}
-                        durationInFrames={durationInFrames}
-                    >
-                        <StyleRenderer group={group} style={style} captionPadding={captionPadding} customConfigs={customStyleConfigs} />
-                    </Sequence>
-                );
-            })}
-            {/* <Html5Audio src={staticFile('audio.mp3')} /> */}
+            {sequences.map(({ key, from, durationInFrames, group }) => (
+                <Sequence
+                    key={key} // Stable key prevents remounting
+                    from={from}
+                    durationInFrames={durationInFrames}
+                    // ✅ Add layout="none" for better performance with changing content
+                    layout="none"
+                >
+                    <StyleRenderer
+                        group={group}
+                        style={style}
+                        captionPadding={captionPadding}
+                        customConfigs={customStyleConfigs}
+                    />
+                </Sequence>
+            ))}
             <Html5Video src={staticFile('input1.mp4')} />
         </AbsoluteFill>
     );
-};
+});
