@@ -10,6 +10,7 @@ import {
     continueRender,
     spring
 } from 'remotion';
+import { memo } from 'react';
 import { SubtitleGroup, Line } from '../../../types/subtitles';
 import { SubtitleStyleConfig, FontStyleDefinition } from '../../../types/style';
 
@@ -159,12 +160,17 @@ const buildTextShadow = (style: FontStyleDefinition): string => {
     return shadows.join(', ');
 };
 
-const WordText: React.FC<{
+const WordText = memo(function WordText({
+    word,
+    wordIndex,
+    lineStart,
+    wordStart,
+}: {
     word: string;
     wordIndex: number;
     lineStart: number;
     wordStart: number;
-}> = ({ word, wordIndex, lineStart, wordStart }) => {
+}) {
     const frame = useCurrentFrame();
     const { fps } = useVideoConfig();
 
@@ -172,74 +178,87 @@ const WordText: React.FC<{
     const wordStartFrame = Math.round(relativeWordStart * fps);
     const animationFrame = Math.max(0, frame - wordStartFrame);
 
-    const springValue = spring({
+    // ✅ Use useMemo for expensive calculations
+    const springValue = useMemo(() => spring({
         frame: animationFrame,
         fps,
-        config: {
-            damping: 100,
-            stiffness: 100,
-        },
-    });
+        config: { damping: 100, stiffness: 100 },
+    }), [animationFrame, fps]);
 
-    const translateY = interpolate(springValue, [0, 1], [50, 0]);
-    const opacity = interpolate(springValue, [0, 1], [0, 1]);
+    const translateY = useMemo(() =>
+        interpolate(springValue, [0, 1], [50, 0]),
+        [springValue]);
+
+    const opacity = useMemo(() =>
+        interpolate(springValue, [0, 1], [0, 1]),
+        [springValue]);
 
     return (
-        <span
-            style={{
-                display: 'inline-block',
-                transform: `translateY(${translateY}px)`,
-                opacity,
-                marginRight: '0.3em',
-                whiteSpace: 'pre',
-            }}
-        >
+        <span style={{
+            display: 'inline-block',
+            transform: `translateY(${translateY}px)`,
+            opacity,
+            marginRight: '0.3em',
+            whiteSpace: 'pre',
+        }}>
             {word}
         </span>
     );
-};
+});
 
-const LineText: React.FC<{
+// Wrap LineText in memo
+const LineText = memo(function LineText({
+    line,
+    lineIndex,
+    translateYOffset,
+    style,
+    captionPadding,
+}: {
     line: Line;
     lineIndex: number;
     translateYOffset: number;
     style: FontStyleDefinition;
     captionPadding: number;
-}> = ({ line, lineIndex, translateYOffset, style, captionPadding }) => {
-    const textShadow = buildTextShadow(style);
+}) {
+    // ✅ Memoize expensive style calculations
+    const textShadow = useMemo(() => buildTextShadow(style), [style]);
+
+    const textStroke = useMemo(() => {
+        if (!style.strokeWeight || style.strokeWeight === 'none') return undefined;
+        const width = style.strokeWeight === 'small' ? 1 : style.strokeWeight === 'medium' ? 2 : 3;
+        return `${width}px ${style.strokeColor || '#000000'}`;
+    }, [style.strokeWeight, style.strokeColor]);
+
+    const containerStyle = useMemo(() => ({
+        justifyContent: 'flex-start' as const,
+        alignItems: 'center' as const,
+        paddingTop: captionPadding,
+    }), [captionPadding]);
+
+    const textStyle = useMemo(() => ({
+        transform: `translateY(${translateYOffset}px)`,
+        fontSize: style.fontSize,
+        fontFamily: `"${style.fontFamily}", sans-serif`,
+        fontWeight: style.fontWeight,
+        fontStyle: style.fontStyle || 'normal',
+        color: style.color || '#ffffff',
+        textAlign: 'center' as const,
+        textShadow: textShadow,
+        lineHeight: 1.0,
+        display: 'flex',
+        flexWrap: 'wrap' as const,
+        justifyContent: 'center',
+        alignItems: 'baseline',
+        textTransform: style.uppercase ? 'uppercase' : 'none' as const,
+        WebkitTextStroke: textStroke,
+    }), [translateYOffset, style, textShadow, textStroke]);
 
     return (
-        <AbsoluteFill
-            style={{
-                justifyContent: 'flex-start',
-                alignItems: 'center',
-                paddingTop: captionPadding,
-            }}
-        >
-            <div
-                style={{
-                    transform: `translateY(${translateYOffset}px)`,
-                    fontSize: style.fontSize,
-                    fontFamily: `"${style.fontFamily}", sans-serif`,
-                    fontWeight: style.fontWeight,
-                    fontStyle: style.fontStyle || 'normal',
-                    color: style.color || '#ffffff',
-                    textAlign: 'center',
-                    textShadow: textShadow,
-                    lineHeight: 1.0,
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    justifyContent: 'center',
-                    alignItems: 'baseline',
-                    textTransform: style.uppercase ? 'uppercase' : 'none',
-                    WebkitTextStroke: style.strokeWeight && style.strokeWeight !== 'none'
-                        ? `${style.strokeWeight === 'small' ? 1 : style.strokeWeight === 'medium' ? 2 : 3}px ${style.strokeColor || '#000000'}`
-                        : undefined,
-                }}
-            >
+        <AbsoluteFill style={containerStyle}>
+            <div style={textStyle}>
                 {line.words.map((word, wordIndex) => (
                     <WordText
-                        key={`word-${lineIndex}-${wordIndex}`}
+                        key={`${word.id}-${wordIndex}`} // Stable key using word.id
                         word={word.word}
                         wordIndex={wordIndex}
                         lineStart={line.start}
@@ -249,7 +268,7 @@ const LineText: React.FC<{
             </div>
         </AbsoluteFill>
     );
-};
+});
 
 type ThreeLinesProps = {
     group: SubtitleGroup;

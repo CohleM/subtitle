@@ -12,8 +12,6 @@ import { SubtitleStyleConfig } from '../../types/style';
 import { defaultStyleConfigs } from '../config/styleConfigs';
 import { StyleEditor } from '../components/StyleEditor';
 import { OptimizedTranscriptEditor } from '../components/OptimizedTranscriptEditor';
-
-// ✅ Extract Player into its own memoized component
 const VideoPlayer = memo(function VideoPlayer({
   transcript,
   selectedStyle,
@@ -29,12 +27,11 @@ const VideoPlayer = memo(function VideoPlayer({
   captionPadding: number;
   customStyleConfigs?: Record<string, SubtitleStyleConfig>;
 }) {
-  // ✅ Memoize inputProps - only changes when transcript or style actually changes
   const inputProps = useMemo(() => ({
     transcript,
     style: selectedStyle,
     captionPadding,
-    customStyleConfigs // Include in memo
+    customStyleConfigs
   }), [transcript, selectedStyle, captionPadding, customStyleConfigs]);
 
   return (
@@ -47,6 +44,13 @@ const VideoPlayer = memo(function VideoPlayer({
         compositionWidth={compositionWidth}
         compositionHeight={compositionHeight}
         controls
+        // ✅ Performance optimizations
+        // moveToBeginningWhenUnmounted={false} // Prevent seek on mount
+        showVolumeControls={false} // Reduce UI overhead
+        // ✅ Double buffering for smoother playback
+        renderLoading={() => null}
+        // ✅ Acknowledge footage
+        acknowledgeRemotionLicense={true}
         style={{
           width: '100%',
           height: '100%',
