@@ -11,6 +11,8 @@ import { StyleSelector } from '../components/StyleSelector';
 import { SubtitleStyleConfig } from '../../types/style';
 import { defaultStyleConfigs } from '../config/styleConfigs';
 import { StyleEditor } from '../components/StyleEditor';
+import { OptimizedTranscriptEditor } from '../components/OptimizedTranscriptEditor';
+
 // ✅ Extract Player into its own memoized component
 const VideoPlayer = memo(function VideoPlayer({
   transcript,
@@ -223,11 +225,7 @@ export default function Page() {
                   />
                 ) : (
                   <div className="flex-1 overflow-y-auto min-h-0">
-                    <TranscriptEditor
-                      transcript={transcript}
-                      setTranscript={setTranscript}
-                      onDelete={handleDeleteSegment}
-                    />
+                    <OptimizedTranscriptEditor transcript={transcript} setTranscript={setTranscript} />
                   </div>
                 )}
               </>
