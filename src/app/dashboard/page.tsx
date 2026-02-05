@@ -64,11 +64,12 @@ export default function DashboardPage() {
             const videoId = data.video_id;
             const originalUrl = data.original_url;
             const filename = data.name
+            const user_id = data.user_id
 
             console.log('video id', videoId, 'full data', data)
 
             setTimeout(() => {
-                router.push(`/style-selection?videoId=${encodeURIComponent(videoId)}&originalUrl=${encodeURIComponent(originalUrl)}&filename=${encodeURIComponent(filename)}`);
+                router.push(`/style-selection?videoId=${encodeURIComponent(videoId)}&originalUrl=${encodeURIComponent(originalUrl)}&filename=${encodeURIComponent(filename)}&userId=${encodeURIComponent(user_id)}`);
             }, 500);
 
         } catch (err) {
