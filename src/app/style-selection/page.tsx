@@ -8,36 +8,36 @@ export default function StyleSelectionPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isGenerating, setIsGenerating] = useState(false);
-    const [videoUrl, setVideoUrl] = useState<string>('');
-    const [videoFileName, setVideoFileName] = useState<string>('');
+    const [videoId, setVideoId] = useState<string>('');
+    const [originalUrl, setOriginalUrl] = useState<string>('');
 
     useEffect(() => {
-        const video = searchParams.get('video');
-        const filename = searchParams.get('filename');
+        const vid = searchParams.get('videoId');
+        const url = searchParams.get('originalUrl');
 
-        if (!video) {
-            // Redirect back to dashboard if no video
+        if (!vid || !url) {
+            // Redirect back to dashboard if params are missing
             router.push('/dashboard');
             return;
         }
 
-        setVideoUrl(decodeURIComponent(video));
-        setVideoFileName(filename ? decodeURIComponent(filename) : 'Untitled Video');
+        setVideoId(decodeURIComponent(vid));
+        setOriginalUrl(decodeURIComponent(url));
     }, [searchParams, router]);
 
     const handleStyleComplete = async (videoUrl: string, selectedStyle: string) => {
         setIsGenerating(true);
 
-        // TODO: Add your API call here to process the video
-        console.log('Video URL:', videoUrl);
+        // TODO: Add API call to process the video
+        console.log('Video ID:', videoId);
+        console.log('Original URL:', originalUrl);
         console.log('Selected Style:', selectedStyle);
 
         // Simulate processing
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // After processing, redirect to editor or show results
-        // router.push('/editor'); // Uncomment when you have an editor route
         setIsGenerating(false);
+        // router.push('/editor'); // Redirect to editor or results
     };
 
     const handleCancel = () => {
@@ -47,7 +47,7 @@ export default function StyleSelectionPage() {
     if (isGenerating) {
         return (
             <div className="h-screen w-full bg-white flex overflow-hidden">
-                {/* Left Sidebar */}
+                {/* Sidebar */}
                 <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0">
                     <div className="p-6">
                         <div className="flex items-center gap-3">
@@ -57,19 +57,11 @@ export default function StyleSelectionPage() {
                             <span className="font-medium text-gray-900 tracking-wide text-sm uppercase">Submagic</span>
                         </div>
                     </div>
-
                     <nav className="flex-1 px-4 space-y-1">
                         <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            </svg>
                             Home
                         </button>
-
                         <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
                             Upgrade
                         </button>
                     </nav>
@@ -77,10 +69,7 @@ export default function StyleSelectionPage() {
 
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col overflow-hidden">
-                    {/* Navbar */}
                     <Navbar />
-
-                    {/* Generating State */}
                     <div className="flex-1 flex items-center justify-center bg-gray-50/30">
                         <div className="text-center space-y-8">
                             <div className="flex justify-center">
@@ -92,14 +81,6 @@ export default function StyleSelectionPage() {
                                 <h1 className="text-2xl font-medium text-gray-900">Generating Captions</h1>
                                 <p className="text-sm text-gray-500">This may take a few moments...</p>
                             </div>
-                            <div className="max-w-md mx-auto space-y-3">
-                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                    <div className="h-full bg-black rounded-full animate-pulse" style={{ width: '60%' }} />
-                                </div>
-                                <p className="text-xs text-gray-400 uppercase tracking-wider">
-                                    Processing your video
-                                </p>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -107,13 +88,13 @@ export default function StyleSelectionPage() {
         );
     }
 
-    if (!videoUrl) {
-        return null; // or a loading state
+    if (!videoId || !originalUrl) {
+        return null; // Or a loading state
     }
 
     return (
         <div className="h-screen w-full bg-white flex overflow-hidden">
-            {/* Left Sidebar */}
+            {/* Sidebar */}
             <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0">
                 <div className="p-6">
                     <div className="flex items-center gap-3">
@@ -123,22 +104,14 @@ export default function StyleSelectionPage() {
                         <span className="font-medium text-gray-900 tracking-wide text-sm uppercase">Submagic</span>
                     </div>
                 </div>
-
                 <nav className="flex-1 px-4 space-y-1">
                     <button
                         onClick={() => router.push('/dashboard')}
                         className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                        </svg>
                         Home
                     </button>
-
                     <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
                         Upgrade
                     </button>
                 </nav>
@@ -146,14 +119,11 @@ export default function StyleSelectionPage() {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Navbar */}
                 <Navbar />
-
-                {/* Style Selection Flow */}
                 <div className="flex-1 overflow-hidden">
                     <UploadFlow
-                        videoUrl={videoUrl}
-                        videoFileName={videoFileName}
+                        videoUrl={originalUrl}
+                        videoFileName={videoId}
                         onComplete={handleStyleComplete}
                         onCancel={handleCancel}
                     />

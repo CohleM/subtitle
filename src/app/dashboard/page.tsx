@@ -62,9 +62,13 @@ export default function DashboardPage() {
             setUploadState('success');
 
             const videoId = data.video_id;
+            const originalUrl = data.original_url;
+            const filename = data.name
+
+            console.log('video id', videoId, 'full data', data)
 
             setTimeout(() => {
-                router.push(`/editor?view=shorts&videoId=${videoId}`);
+                router.push(`/style-selection?videoId=${encodeURIComponent(videoId)}&originalUrl=${encodeURIComponent(originalUrl)}&filename=${encodeURIComponent(filename)}`);
             }, 500);
 
         } catch (err) {
