@@ -71,7 +71,7 @@ export default function Page() {
   const [selectedStyle, setSelectedStyle] = useState('basic');
   const [editingStyle, setEditingStyle] = useState<string | null>(null); // New state
   const [customConfigs, setCustomConfigs] = useState<Record<string, SubtitleStyleConfig>>({}); // New state
-
+  console.log('selectedStyle', selectedStyle, 'editingStyle', editingStyle)
   useEffect(() => {
     setTranscript(transcriptJson as SubtitleGroup[]);
   }, []);

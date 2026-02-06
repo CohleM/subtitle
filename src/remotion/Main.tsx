@@ -7,18 +7,21 @@ type MainProps = {
     style?: string;
     captionPadding: number;
     customStyleConfigs?: Record<string, SubtitleStyleConfig>; // Add this
+    videoUrl: string
 };
 
 export const Main: React.FC<MainProps> = ({
     transcript,
     style = 'basic',
     captionPadding,
-    customStyleConfigs
+    customStyleConfigs,
+    videoUrl
 }) => {
     return <MyVideo
         groups={transcript}
         style={style}
         captionPadding={captionPadding}
         customStyleConfigs={customStyleConfigs} // Pass through
+        videoUrl={videoUrl}
     />;
 };

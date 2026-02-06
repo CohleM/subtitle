@@ -1,11 +1,24 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../components/DashboardNavbar';
 import { Upload, Video } from 'lucide-react';
 import useLocalStorage from 'use-local-storage';
 
 type UploadState = 'idle' | 'uploading' | 'success' | 'error';
+
+interface Project {
+    id: number;
+    name: string | null;
+    original_url: string | null;
+    low_res_url: string | null;
+    status: string;
+    created_at: string;
+    updated_at: string;
+    current_style?: any;
+    style_id?: number;
+    transcript?: any;
+}
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -18,8 +31,46 @@ export default function DashboardPage() {
 
     const [accessToken] = useLocalStorage("access_token", "");
 
+    // State for projects
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+    const [projectsError, setProjectsError] = useState<string | null>(null);
 
+    // ========== FETCH PROJECTS ==========
+    const fetchProjects = async () => {
+        try {
+            setIsLoadingProjects(true);
+            setProjectsError(null);
 
+            const response = await fetch(`${apiUrl}/videos/`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch projects');
+            }
+
+            const data = await response.json();
+            console.log('data', data)
+            setProjects(data);
+        } catch (err) {
+            console.error('Error fetching projects:', err);
+            setProjectsError('Failed to load projects');
+        } finally {
+            setIsLoadingProjects(false);
+        }
+    };
+
+    // Fetch projects on component mount
+    useEffect(() => {
+        if (accessToken) {
+            fetchProjects();
+        }
+    }, [accessToken]);
 
     // ========== BACKEND UPLOAD FUNCTION ==========
     const uploadToBackend = async (file: File) => {
@@ -105,12 +156,23 @@ export default function DashboardPage() {
         }
     }, []);
 
-    // ==================== MOCK PROJECTS ====================
-    const projects = [
-        { id: 1, title: 'Project 1', thumbnail: null, date: '2 days ago', status: 'completed' },
-        { id: 2, title: 'Project 2', thumbnail: null, date: '5 days ago', status: 'completed' },
-        { id: 3, title: 'Project 3', thumbnail: null, date: '1 week ago', status: 'processing' },
-    ];
+    // ========== HELPER FUNCTIONS ==========
+    const getRelativeTime = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+        if (diffInSeconds < 60) return 'just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+        if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+        if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)} weeks ago`;
+        return `${Math.floor(diffInSeconds / 2592000)} months ago`;
+    };
+
+    const handleProjectClick = (project: Project) => {
+        router.push(`/player?videoId=${project.id}`);
+    };
 
     return (
         <div className="h-screen w-full bg-white flex overflow-hidden">
@@ -231,12 +293,31 @@ export default function DashboardPage() {
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-base font-semibold text-gray-900">Recent Projects</h2>
-                                <button className="text-[10px] font-medium text-gray-600 hover:text-gray-900 uppercase tracking-wider">
-                                    View All
-                                </button>
+                                {projects.length > 0 && (
+                                    <button
+                                        onClick={fetchProjects}
+                                        className="text-[10px] font-medium text-gray-600 hover:text-gray-900 uppercase tracking-wider"
+                                    >
+                                        Refresh
+                                    </button>
+                                )}
                             </div>
 
-                            {projects.length === 0 ? (
+                            {isLoadingProjects ? (
+                                <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
+                                    <p className="text-xs text-gray-500">Loading projects...</p>
+                                </div>
+                            ) : projectsError ? (
+                                <div className="text-center py-8 bg-white rounded-lg border border-red-200">
+                                    <p className="text-xs text-red-500">{projectsError}</p>
+                                    <button
+                                        onClick={fetchProjects}
+                                        className="mt-2 text-xs text-gray-600 hover:text-gray-900 underline"
+                                    >
+                                        Try again
+                                    </button>
+                                </div>
+                            ) : projects.length === 0 ? (
                                 <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
                                     <p className="text-xs text-gray-500">No projects yet. Create your first one above!</p>
                                 </div>
@@ -245,14 +326,23 @@ export default function DashboardPage() {
                                     {projects.map((project) => (
                                         <div
                                             key={project.id}
+                                            onClick={() => handleProjectClick(project)}
                                             className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-sm transition-shadow cursor-pointer group"
                                         >
                                             <div className="aspect-video bg-gray-100 relative">
-                                                {project.thumbnail ? (
-                                                    <img
-                                                        src={project.thumbnail}
-                                                        alt={project.title}
+                                                {project.low_res_url ? (
+                                                    <video
+                                                        src={project.low_res_url}
                                                         className="w-full h-full object-cover"
+                                                        muted
+                                                        playsInline
+                                                    />
+                                                ) : project.original_url ? (
+                                                    <video
+                                                        src={project.original_url}
+                                                        className="w-full h-full object-cover"
+                                                        muted
+                                                        playsInline
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center">
@@ -265,14 +355,26 @@ export default function DashboardPage() {
                                                         Processing
                                                     </div>
                                                 )}
+
+                                                {project.status === 'uploading' && (
+                                                    <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-blue-500/80 backdrop-blur-sm rounded text-[9px] font-medium text-white uppercase tracking-wider">
+                                                        Uploading
+                                                    </div>
+                                                )}
+
+                                                {project.status === 'error' && (
+                                                    <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-red-500/80 backdrop-blur-sm rounded text-[9px] font-medium text-white uppercase tracking-wider">
+                                                        Error
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="p-3">
                                                 <h3 className="text-xs font-medium text-gray-900 mb-0.5 group-hover:text-black transition-colors truncate">
-                                                    {project.title}
+                                                    {project.name || `Video ${project.id}`}
                                                 </h3>
                                                 <p className="text-[10px] text-gray-500">
-                                                    {project.date}
+                                                    {getRelativeTime(project.created_at)}
                                                 </p>
                                             </div>
                                         </div>

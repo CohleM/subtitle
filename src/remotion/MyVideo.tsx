@@ -10,6 +10,7 @@ type MainProps = {
     style?: string;
     captionPadding?: number;
     customStyleConfigs?: Record<string, SubtitleStyleConfig>;
+    videoUrl: string
 };
 
 // ✅ Memoize the entire component to prevent unnecessary re-renders
@@ -17,7 +18,8 @@ export const MyVideo: React.FC<MainProps> = memo(({
     groups,
     style = 'basic',
     captionPadding = 540,
-    customStyleConfigs
+    customStyleConfigs,
+    videoUrl
 }) => {
     const { fps } = useVideoConfig();
 
@@ -57,7 +59,7 @@ export const MyVideo: React.FC<MainProps> = memo(({
                     />
                 </Sequence>
             ))}
-            <Html5Video src={staticFile('input1.mp4')} />
+            <Html5Video src={videoUrl} />
         </AbsoluteFill>
     );
 });
