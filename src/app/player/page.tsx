@@ -16,6 +16,13 @@ import { Navbar } from '../../components/DashboardNavbar';
 import { useSearchParams } from "next/navigation";
 import useLocalStorage from 'use-local-storage';
 
+type VideoInfo = {
+    width: number,
+    height: number,
+    duration: number,
+    fps: number
+};
+
 const VideoPlayer = memo(function VideoPlayer({
     transcript,
     selectedStyle,
@@ -24,6 +31,7 @@ const VideoPlayer = memo(function VideoPlayer({
     captionPadding,
     customStyleConfigs,
     videoUrl,
+    videoInfo
 }: {
     transcript: SubtitleGroup[];
     selectedStyle: string;
@@ -32,24 +40,26 @@ const VideoPlayer = memo(function VideoPlayer({
     captionPadding: number;
     customStyleConfigs?: Record<string, SubtitleStyleConfig>;
     videoUrl: string;
+    videoInfo: VideoInfo
 }) {
     const inputProps = useMemo(() => ({
         transcript,
         style: selectedStyle,
         captionPadding,
         customStyleConfigs,
-        videoUrl
-    }), [transcript, selectedStyle, captionPadding, customStyleConfigs, videoUrl]);
+        videoUrl,
+        videoInfo
+    }), [transcript, selectedStyle, captionPadding, customStyleConfigs, videoUrl, videoInfo]);
 
     return (
         <div className="w-full h-full bg-black overflow-hidden rounded-3xl border border-gray-200">
             <Player
                 component={Main}
                 inputProps={inputProps}
-                durationInFrames={1800 * 30}
-                fps={30}
-                compositionWidth={compositionWidth}
-                compositionHeight={compositionHeight}
+                durationInFrames={Math.floor(videoInfo.duration * videoInfo.fps)}
+                fps={Math.floor(videoInfo.fps)}
+                compositionWidth={Math.floor(videoInfo.width)}
+                compositionHeight={Math.floor(videoInfo.height)}
                 controls
                 // ✅ Performance optimizations
                 // moveToBeginningWhenUnmounted={false} // Prevent seek on mount
@@ -83,6 +93,8 @@ export default function Page() {
     const [customConfigs, setCustomConfigs] = useState<Record<string, SubtitleStyleConfig>>({}); // New state
     const [isLoading, setIsLoading] = useState(true);
     const [lowresUrl, setLowresUrl] = useState('')
+    const [videoInfo, setVideoInfo] = useState<VideoInfo>({ width: 0, height: 0, duration: 0, fps: 0 });
+
     useEffect(() => {
         const loadVideoData = async () => {
             if (!videoId) return;
@@ -100,16 +112,21 @@ export default function Page() {
                     }
                 });
                 const video = await videoRes.json();
-                console.log('video', video)
+
 
                 const currentStyle = video.current_style;
                 const styleKey = currentStyle?.id || "basic";
 
+                console.log('all styles mapping', video)
+                const styleId = video.all_styles_mapping[styleKey]
+
+
+
                 // ===== 2️⃣ Fetch Style Table Row =====
                 let styleTableData = null;
 
-                if (video.style_id) {
-                    const styleRes = await fetch(`${apiUrl}/styles/${video.style_id}`, {
+                if (styleId) {
+                    const styleRes = await fetch(`${apiUrl}/styles/${styleId}`, {
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
                             "Content-Type": "application/json"
@@ -120,8 +137,7 @@ export default function Page() {
 
                 // ===== 3️⃣ Extract Transcript JSON =====
                 const transcriptFromStyle =
-                    styleTableData?.transcript_json ||
-                    styleTableData?.[styleKey] ||
+                    styleTableData?.styled_transcript ||
                     [];
 
                 // ===== 4️⃣ Apply To Player =====
@@ -129,6 +145,13 @@ export default function Page() {
                 setCustomConfigs(currentStyle);
                 setSelectedStyle(styleKey);
                 setLowresUrl(video.low_res_url)
+
+                setVideoInfo({
+                    width: video.width,
+                    height: video.height,
+                    duration: video.duration,
+                    fps: video.fps
+                });
 
 
             } catch (err) {
@@ -209,6 +232,7 @@ export default function Page() {
                                     captionPadding={captionPadding} // ✅ Pass to player
                                     customStyleConfigs={customConfigs} // Pass this
                                     videoUrl={lowresUrl}
+                                    videoInfo={videoInfo}
                                 />
                             </div>
                         </div>
