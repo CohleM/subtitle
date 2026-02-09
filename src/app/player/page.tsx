@@ -1,7 +1,7 @@
 'use client';
 
 import { Player } from '@remotion/player';
-import { useEffect, useState, useMemo, memo, useCallback } from 'react';
+import { useEffect, useState, useMemo, memo, useCallback, useRef } from 'react';
 import { Plus, Trash2, Monitor, Maximize, Wand2 } from 'lucide-react';
 import transcriptJson from '../../data/transcript_30_min.json';
 import { SubtitleGroup } from '../../../types/subtitles';
@@ -97,6 +97,10 @@ export default function Page() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [styleChangeError, setStyleChangeError] = useState<string | null>(null);
 
+    // Track original config for comparison to detect changes
+    const [originalEditingConfig, setOriginalEditingConfig] = useState<SubtitleStyleConfig | null>(null);
+    const [isSavingStyle, setIsSavingStyle] = useState(false);
+
     useEffect(() => {
         const loadVideoData = async () => {
             if (!videoId) return;
@@ -117,6 +121,8 @@ export default function Page() {
                 const styleKey = currentStyle?.id || "basic";
                 const styleId = video.all_styles_mapping[styleKey];
 
+                console.log('current style gg yolo haha ', currentStyle)
+
                 let styleTableData = null;
                 if (styleId) {
                     const styleRes = await fetch(`${apiUrl}/styles/${styleId}`, {
@@ -131,7 +137,13 @@ export default function Page() {
                 const transcriptFromStyle = styleTableData?.styled_transcript || [];
 
                 setTranscript(transcriptFromStyle);
-                setCustomConfigs(currentStyle);
+                if (currentStyle && currentStyle.id) {
+                    setCustomConfigs({
+                        [currentStyle.id]: currentStyle
+                    });
+                } else {
+                    setCustomConfigs({});
+                }
                 setSelectedStyle(styleKey);
                 setLowresUrl(video.low_res_url);
                 setVideoInfo({
@@ -160,23 +172,94 @@ export default function Page() {
         return customConfigs[selectedStyle] || defaultStyleConfigs[selectedStyle];
     }, [customConfigs, selectedStyle]);
 
+    // Check if there are unsaved changes in the editor
+    const hasUnsavedChanges = useMemo(() => {
+        if (!editingStyle || !originalEditingConfig) return false;
+        const currentConfig = customConfigs[editingStyle];
+        return JSON.stringify(currentConfig) !== JSON.stringify(originalEditingConfig);
+    }, [customConfigs, editingStyle, originalEditingConfig]);
+
     const handleStyleUpdate = (config: SubtitleStyleConfig) => {
         setCustomConfigs(prev => ({
             ...prev,
             [config.id]: config
         }));
-
-
-        setTimeout(() => {
-            console.log('set custom configs', customConfigs)
-        }, 2000);
-
     };
+
+    // Handle entering edit mode - store original config
+    const handleEditStyle = useCallback((styleId: string) => {
+        setEditingStyle(styleId);
+        // Store a deep copy of the original config for comparison
+        const configToEdit = customConfigs[styleId] || defaultStyleConfigs[styleId];
+        setOriginalEditingConfig(JSON.parse(JSON.stringify(configToEdit)));
+    }, [customConfigs]);
+
+    // Handle exiting edit mode
+    const handleBackFromEditor = useCallback(() => {
+        setEditingStyle(null);
+        setOriginalEditingConfig(null);
+    }, []);
+
+    // Save style config to backend
+    const handleSaveStyleConfig = useCallback(async (config: SubtitleStyleConfig): Promise<void> => {
+        if (!videoId) return;
+
+        setIsSavingStyle(true);
+        setStyleChangeError(null);
+
+        try {
+            const requestData = {
+                video_id: videoId,
+                style_config: config,
+            };
+
+            const response = await fetch(`${apiUrl}/videos/change_styles`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify(requestData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || `Save failed with status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Style save result:', result);
+
+            if (result.success) {
+                // Update transcript if new one was generated
+                if (result.result) {
+                    setTranscript(result.result);
+                }
+
+                // Update the original config to match saved state
+                setOriginalEditingConfig(JSON.parse(JSON.stringify(config)));
+
+                // Update custom configs with server response
+                if (result.current_style) {
+                    setCustomConfigs(prev => ({
+                        ...prev,
+                        [config.id]: result.current_style
+                    }));
+                }
+            }
+
+        } catch (error) {
+            console.error('Error saving style:', error);
+            setStyleChangeError(error instanceof Error ? error.message : 'Failed to save style');
+            throw error; // Re-throw so editor can handle it
+        } finally {
+            setIsSavingStyle(false);
+        }
+    }, [videoId, apiUrl, accessToken]);
 
     // Handle style selection - show confirmation dialog
     const handleStyleSelect = useCallback((styleId: string) => {
-        if (styleId === selectedStyle) return; // Don't show dialog if same style
-
+        if (styleId === selectedStyle) return;
 
         const styleConfig = defaultStyleConfigs[styleId];
         if (!styleConfig) {
@@ -202,8 +285,6 @@ export default function Page() {
                 style_config: styleConfig,
             };
 
-            console.log('request data', requestData)
-
             const response = await fetch(`${apiUrl}/videos/change_styles`, {
                 method: 'POST',
                 headers: {
@@ -221,27 +302,19 @@ export default function Page() {
             const result = await response.json();
             console.log('Style change result:', result);
 
-            // Update local state with new data
             if (result.success) {
-                // Update transcript with the new styled transcript
                 if (result.result) {
                     setTranscript(result.result);
                 }
 
-                // Update selected style
                 setSelectedStyle(pendingStyleChange);
 
-                // Update custom configs with the new current_style from response
                 if (result.current_style) {
                     setCustomConfigs(prev => ({
                         ...prev,
                         [pendingStyleChange]: result.current_style
                     }));
                 }
-
-                // Optionally update all_styles_mapping if needed
-                // You might want to store this in state if you need it elsewhere
-                console.log('Available styles:', result.all_styles);
             }
 
         } catch (error) {
@@ -253,12 +326,10 @@ export default function Page() {
         }
     }, [pendingStyleChange, videoId, apiUrl, accessToken]);
 
-    // Cancel style change
     const handleCancelStyleChange = useCallback(() => {
         setPendingStyleChange(null);
     }, []);
 
-    // Get the name of the pending style for the dialog
     const pendingStyleName = useMemo(() => {
         if (!pendingStyleChange) return '';
         const style = defaultStyleConfigs[pendingStyleChange];
@@ -346,7 +417,10 @@ export default function Page() {
                             <StyleEditor
                                 config={customConfigs[editingStyle] || defaultStyleConfigs[editingStyle]}
                                 onChange={handleStyleUpdate}
-                                onBack={() => setEditingStyle(null)}
+                                onBack={handleBackFromEditor}
+                                onSave={handleSaveStyleConfig}
+                                isSaving={isSavingStyle}
+                                hasChanges={hasUnsavedChanges}
                             />
                         ) : (
                             <>
@@ -373,7 +447,7 @@ export default function Page() {
                                     <StyleSelector
                                         selectedStyle={selectedStyle}
                                         onStyleSelect={handleStyleSelect}
-                                        onEditStyle={setEditingStyle}
+                                        onEditStyle={handleEditStyle}
                                     />
                                 ) : (
                                     <div className="flex-1 overflow-y-auto min-h-0">
@@ -386,7 +460,6 @@ export default function Page() {
                 </div>
             </div>
 
-            {/* Style Change Confirmation Dialog */}
             <StyleChangeDialog
                 isOpen={!!pendingStyleChange}
                 onClose={handleCancelStyleChange}
