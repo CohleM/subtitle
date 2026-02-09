@@ -46,6 +46,8 @@ export default function StyleSelectionPage() {
             // Get the style config for the selected style
             const styleConfig = defaultStyleConfigs[selectedStyle];
 
+            console.log('styleConfig', styleConfig)
+
             if (!styleConfig) {
                 console.error(`Style "${selectedStyle}" not found`);
                 // Optionally fall back to a default style

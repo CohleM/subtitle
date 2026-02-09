@@ -48,6 +48,8 @@ export const UploadFlow: React.FC<{
         ? styles
         : styles.filter(s => s.category === activeCategory);
 
+
+    console.log('selected style gg', selectedStyle)
     return (
         <div className="h-full flex flex-col bg-white overflow-hidden">
             {/* Header */}

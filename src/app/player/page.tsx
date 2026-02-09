@@ -1,7 +1,7 @@
 'use client';
 
 import { Player } from '@remotion/player';
-import { useEffect, useState, useMemo, memo } from 'react';
+import { useEffect, useState, useMemo, memo, useCallback } from 'react';
 import { Plus, Trash2, Monitor, Maximize, Wand2 } from 'lucide-react';
 import transcriptJson from '../../data/transcript_30_min.json';
 import { SubtitleGroup } from '../../../types/subtitles';
@@ -15,6 +15,9 @@ import { OptimizedTranscriptEditor } from '../../components/OptimizedTranscriptE
 import { Navbar } from '../../components/DashboardNavbar';
 import { useSearchParams } from "next/navigation";
 import useLocalStorage from 'use-local-storage';
+import { AlertCircle } from 'lucide-react';
+
+import { StyleChangeDialog } from '../../components/StyleChangeDialogue';
 
 type VideoInfo = {
     width: number,
@@ -61,12 +64,8 @@ const VideoPlayer = memo(function VideoPlayer({
                 compositionWidth={Math.floor(videoInfo.width)}
                 compositionHeight={Math.floor(videoInfo.height)}
                 controls
-                // ✅ Performance optimizations
-                // moveToBeginningWhenUnmounted={false} // Prevent seek on mount
-                showVolumeControls={false} // Reduce UI overhead
-                // ✅ Double buffering for smoother playback
+                showVolumeControls={false}
                 renderLoading={() => null}
-                // ✅ Acknowledge footage
                 acknowledgeRemotionLicense={true}
                 style={{
                     width: '100%',
@@ -77,34 +76,35 @@ const VideoPlayer = memo(function VideoPlayer({
     );
 });
 
-
-
-
 export default function Page() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL
     const [accessToken] = useLocalStorage("access_token", "");
     const searchParams = useSearchParams();
     const videoId = searchParams.get("videoId");
+
     const [transcript, setTranscript] = useState<SubtitleGroup[]>([]);
     const [activeTab, setActiveTab] = useState<'style' | 'captions'>('captions');
     const [isPortrait, setIsPortrait] = useState(true);
     const [selectedStyle, setSelectedStyle] = useState('basic');
-    const [editingStyle, setEditingStyle] = useState<string | null>(null); // New state
-    const [customConfigs, setCustomConfigs] = useState<Record<string, SubtitleStyleConfig>>({}); // New state
+    const [editingStyle, setEditingStyle] = useState<string | null>(null);
+    const [customConfigs, setCustomConfigs] = useState<Record<string, SubtitleStyleConfig>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [lowresUrl, setLowresUrl] = useState('')
     const [videoInfo, setVideoInfo] = useState<VideoInfo>({ width: 0, height: 0, duration: 0, fps: 0 });
+
+    // New state for style change dialog
+    const [pendingStyleChange, setPendingStyleChange] = useState<string | null>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [styleChangeError, setStyleChangeError] = useState<string | null>(null);
 
     useEffect(() => {
         const loadVideoData = async () => {
             if (!videoId) return;
 
             try {
-                console.log('yooo')
                 setIsLoading(true);
+                setStyleChangeError(null);
 
-                // ===== 1️⃣ Fetch Video =====
-                // ===== 1️⃣ Fetch Video =====
                 const videoRes = await fetch(`${apiUrl}/videos/${videoId}`, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
@@ -113,18 +113,11 @@ export default function Page() {
                 });
                 const video = await videoRes.json();
 
-
                 const currentStyle = video.current_style;
                 const styleKey = currentStyle?.id || "basic";
+                const styleId = video.all_styles_mapping[styleKey];
 
-                console.log('all styles mapping', video)
-                const styleId = video.all_styles_mapping[styleKey]
-
-
-
-                // ===== 2️⃣ Fetch Style Table Row =====
                 let styleTableData = null;
-
                 if (styleId) {
                     const styleRes = await fetch(`${apiUrl}/styles/${styleId}`, {
                         headers: {
@@ -135,17 +128,12 @@ export default function Page() {
                     styleTableData = await styleRes.json();
                 }
 
-                // ===== 3️⃣ Extract Transcript JSON =====
-                const transcriptFromStyle =
-                    styleTableData?.styled_transcript ||
-                    [];
+                const transcriptFromStyle = styleTableData?.styled_transcript || [];
 
-                // ===== 4️⃣ Apply To Player =====
                 setTranscript(transcriptFromStyle);
                 setCustomConfigs(currentStyle);
                 setSelectedStyle(styleKey);
-                setLowresUrl(video.low_res_url)
-
+                setLowresUrl(video.low_res_url);
                 setVideoInfo({
                     width: video.width,
                     height: video.height,
@@ -153,33 +141,20 @@ export default function Page() {
                     fps: video.fps
                 });
 
-
             } catch (err) {
                 console.error("Failed to load player data", err);
+                setStyleChangeError("Failed to load video data");
             } finally {
-
                 setIsLoading(false);
             }
         };
 
         loadVideoData();
-    }, [videoId, apiUrl]);
-
-
-    // console.log('selectedStyle', selectedStyle, 'editingStyle', editingStyle)
-    // useEffect(() => {
-    //     setTranscript(transcriptJson as SubtitleGroup[]);
-    // }, []);
+    }, [videoId, apiUrl, accessToken]);
 
     const compositionWidth = isPortrait ? 1080 : 1920;
     const compositionHeight = isPortrait ? 1920 : 1080;
-
-    const [captionPadding, setCaptionPadding] = useState(540); // Add this
-
-    const handleDeleteSegment = (index: number) => {
-        const newTranscript = transcript.filter((_, i) => i !== index);
-        setTranscript(newTranscript);
-    };
+    const [captionPadding, setCaptionPadding] = useState(540);
 
     const currentStyleConfig = useMemo(() => {
         return customConfigs[selectedStyle] || defaultStyleConfigs[selectedStyle];
@@ -190,7 +165,105 @@ export default function Page() {
             ...prev,
             [config.id]: config
         }));
+
+
+        setTimeout(() => {
+            console.log('set custom configs', customConfigs)
+        }, 2000);
+
     };
+
+    // Handle style selection - show confirmation dialog
+    const handleStyleSelect = useCallback((styleId: string) => {
+        if (styleId === selectedStyle) return; // Don't show dialog if same style
+
+
+        const styleConfig = defaultStyleConfigs[styleId];
+        if (!styleConfig) {
+            console.error(`Style "${styleId}" not found`);
+            return;
+        }
+
+        setPendingStyleChange(styleId);
+    }, [selectedStyle]);
+
+    // Handle confirmed style change
+    const handleConfirmStyleChange = useCallback(async () => {
+        if (!pendingStyleChange || !videoId) return;
+
+        setIsGenerating(true);
+        setStyleChangeError(null);
+
+        try {
+            const styleConfig = defaultStyleConfigs[pendingStyleChange];
+
+            const requestData = {
+                video_id: videoId,
+                style_config: styleConfig,
+            };
+
+            console.log('request data', requestData)
+
+            const response = await fetch(`${apiUrl}/videos/change_styles`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify(requestData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || `Style change failed with status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Style change result:', result);
+
+            // Update local state with new data
+            if (result.success) {
+                // Update transcript with the new styled transcript
+                if (result.result) {
+                    setTranscript(result.result);
+                }
+
+                // Update selected style
+                setSelectedStyle(pendingStyleChange);
+
+                // Update custom configs with the new current_style from response
+                if (result.current_style) {
+                    setCustomConfigs(prev => ({
+                        ...prev,
+                        [pendingStyleChange]: result.current_style
+                    }));
+                }
+
+                // Optionally update all_styles_mapping if needed
+                // You might want to store this in state if you need it elsewhere
+                console.log('Available styles:', result.all_styles);
+            }
+
+        } catch (error) {
+            console.error('Error changing style:', error);
+            setStyleChangeError(error instanceof Error ? error.message : 'Failed to change style');
+        } finally {
+            setIsGenerating(false);
+            setPendingStyleChange(null);
+        }
+    }, [pendingStyleChange, videoId, apiUrl, accessToken]);
+
+    // Cancel style change
+    const handleCancelStyleChange = useCallback(() => {
+        setPendingStyleChange(null);
+    }, []);
+
+    // Get the name of the pending style for the dialog
+    const pendingStyleName = useMemo(() => {
+        if (!pendingStyleChange) return '';
+        const style = defaultStyleConfigs[pendingStyleChange];
+        return style?.name || pendingStyleChange;
+    }, [pendingStyleChange]);
 
     if (isLoading) {
         return (
@@ -199,9 +272,24 @@ export default function Page() {
             </div>
         );
     }
+
     return (
         <div className="h-screen w-full bg-white flex flex-col overflow-hidden">
             <Navbar />
+
+            {/* Error Toast */}
+            {styleChangeError && (
+                <div className="absolute top-20 left-1/2 -translate-x-1/2 z-40 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 animate-in slide-in-from-top-2">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="text-sm font-medium">{styleChangeError}</span>
+                    <button
+                        onClick={() => setStyleChangeError(null)}
+                        className="ml-2 text-red-600 hover:text-red-800"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
 
             <div className="flex-1 overflow-hidden">
                 <div className="h-full grid grid-cols-2">
@@ -223,14 +311,13 @@ export default function Page() {
                                     justifyContent: 'center',
                                 }}
                             >
-                                {/* ✅ Now Player only re-renders when transcript or selectedStyle changes */}
                                 <VideoPlayer
                                     transcript={transcript}
                                     selectedStyle={selectedStyle}
                                     compositionWidth={compositionWidth}
                                     compositionHeight={compositionHeight}
-                                    captionPadding={captionPadding} // ✅ Pass to player
-                                    customStyleConfigs={customConfigs} // Pass this
+                                    captionPadding={captionPadding}
+                                    customStyleConfigs={customConfigs}
                                     videoUrl={lowresUrl}
                                     videoInfo={videoInfo}
                                 />
@@ -254,9 +341,6 @@ export default function Page() {
                         </div>
                     </div>
 
-
-                    {/* Right Side - Rest of your UI */}
-                    {/* Right Side - Rest of your UI */}
                     <div className="h-full bg-white flex flex-col overflow-hidden rounded-l-3xl">
                         {editingStyle ? (
                             <StyleEditor
@@ -288,8 +372,8 @@ export default function Page() {
                                 {activeTab === 'style' ? (
                                     <StyleSelector
                                         selectedStyle={selectedStyle}
-                                        onStyleSelect={setSelectedStyle}
-                                        onEditStyle={setEditingStyle} // Pass this
+                                        onStyleSelect={handleStyleSelect}
+                                        onEditStyle={setEditingStyle}
                                     />
                                 ) : (
                                     <div className="flex-1 overflow-y-auto min-h-0">
@@ -301,6 +385,15 @@ export default function Page() {
                     </div>
                 </div>
             </div>
+
+            {/* Style Change Confirmation Dialog */}
+            <StyleChangeDialog
+                isOpen={!!pendingStyleChange}
+                onClose={handleCancelStyleChange}
+                onConfirm={handleConfirmStyleChange}
+                styleName={pendingStyleName}
+                isGenerating={isGenerating}
+            />
         </div>
     );
 }
