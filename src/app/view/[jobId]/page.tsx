@@ -2,14 +2,16 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Download, Pencil } from "lucide-react";
 import useLocalStorage from "use-local-storage";
+import { Navbar } from '../../../components/DashboardNavbar';
 
 type RenderStatusResponse = {
     status?: string;
     progress?: number;
     videoUrl?: string;
-    [key: string]: any; // allow backend to evolve safely
+    [key: string]: any;
+    videoId?: number;
 };
 
 export default function RenderViewPage() {
@@ -25,7 +27,6 @@ export default function RenderViewPage() {
 
     const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Detect completion generically
     function isCompleted(status?: string) {
         if (!status) return false;
         return status.toLowerCase().includes("complete");
@@ -43,7 +44,6 @@ export default function RenderViewPage() {
             .replace(/\b\w/g, (l) => l.toUpperCase());
     }
 
-    // Poll render status
     useEffect(() => {
         if (!jobId) return;
 
@@ -59,17 +59,14 @@ export default function RenderViewPage() {
                 if (!res.ok) throw new Error("Failed to fetch render status");
 
                 const json = await res.json();
-                console.log(json)
                 setData(json);
 
-                // Stop polling if finished
                 if (isCompleted(json.status) || isFailed(json.status)) {
                     if (pollingRef.current) {
                         clearInterval(pollingRef.current);
                         pollingRef.current = null;
                     }
                 }
-
             } catch (err) {
                 console.error(err);
                 setError("Failed to fetch render status");
@@ -84,86 +81,107 @@ export default function RenderViewPage() {
         };
     }, [jobId, apiUrl, accessToken]);
 
-    // Loading state
+    // Initial loading state — no data yet
     if (!data && !error) {
         return (
-            <div className="h-screen flex items-center justify-center bg-white">
-                <Loader2 className="animate-spin w-6 h-6 text-gray-600" />
+            <div className="h-screen w-full bg-white flex flex-col overflow-hidden">
+                <Navbar />
+                <div className="flex-1 flex items-center justify-center">
+                    <Loader2 className="animate-spin w-6 h-6 text-gray-400" />
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-white flex flex-col">
+        <div className="h-screen w-full bg-white flex flex-col overflow-hidden">
+            <Navbar />
 
-            {/* Header */}
-            <div className="border-b border-gray-200 px-8 py-5 flex justify-between items-center">
-                <div>
-                    <h1 className="text-lg font-semibold">Render Job</h1>
-                    <p className="text-xs text-gray-500 mt-1">Job ID: {jobId}</p>
-                </div>
+            <div className="flex-1 overflow-hidden flex items-center justify-center p-8">
 
-                <button
-                    onClick={() => router.push("/dashboard")}
-                    className="text-xs font-semibold uppercase tracking-wide px-4 py-2 bg-gray-100 rounded-xl hover:bg-gray-200 transition"
-                >
-                    Back
-                </button>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 flex items-center justify-center p-10">
-
+                {/* Error */}
                 {error && (
                     <div className="bg-red-50 border border-red-200 rounded-xl px-6 py-5 flex gap-3 items-center">
-                        <XCircle className="text-red-500 w-5 h-5" />
+                        <XCircle className="text-red-500 w-5 h-5 shrink-0" />
                         <span className="text-red-700 text-sm font-medium">{error}</span>
                     </div>
                 )}
 
+                {/* Rendering in progress */}
                 {!error && data && !isCompleted(data.status) && !isFailed(data.status) && (
-                    <div className="w-full max-w-lg text-center">
+                    <div className="w-full max-w-md">
 
-                        {/* Spinner */}
-                        <div className="flex justify-center mb-6">
-                            <Loader2 className="animate-spin w-10 h-10 text-black" />
+                        <div className="bg-white border border-gray-200 rounded-3xl p-10 flex flex-col items-center text-center">
+
+                            <div className="mb-6">
+                                <Loader2 className="animate-spin w-8 h-8 text-black" />
+                            </div>
+
+                            <h2 className="text-base font-semibold mb-1">
+                                {formatStatus(data.status)}
+                            </h2>
+
+                            <p className="text-xs text-gray-400 font-mono mb-8">
+                                {jobId}
+                            </p>
+
+                            {/* Progress bar */}
+                            <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                    className="bg-black h-full rounded-full transition-all duration-500"
+                                    style={{ width: `${Math.max(data.progress ?? 0, 4)}%` }}
+                                />
+                            </div>
+
+                            <p className="text-xs text-gray-400 mt-3 uppercase tracking-wider">
+                                {data.progress ?? 0}% complete
+                            </p>
+
                         </div>
-
-                        {/* Status */}
-                        <h2 className="text-xl font-semibold mb-2">
-                            {formatStatus(data.status)}
-                        </h2>
-
-                        {/* Progress */}
-                        <div className="mt-6 w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                            <div
-                                className="bg-black h-full transition-all duration-500"
-                                style={{ width: `${data.progress ?? 10}%` }}
-                            />
-                        </div>
-
-                        <p className="text-xs text-gray-500 mt-3">
-                            {data.progress ?? 0}% complete
-                        </p>
-
                     </div>
                 )}
 
                 {/* Completed */}
                 {!error && data && isCompleted(data.status) && data.videoUrl && (
-                    <div className="w-full max-w-4xl">
+                    <div className="w-full max-w-4xl flex flex-col items-center gap-6">
 
-                        <div className="flex items-center gap-2 mb-6 justify-center">
-                            <CheckCircle2 className="text-green-500 w-6 h-6" />
-                            <h2 className="text-xl font-semibold">Render Complete</h2>
+                        {/* Status badge */}
+                        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2">
+                            <CheckCircle2 className="text-black w-4 h-4" />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-black">
+                                Render Complete
+                            </span>
                         </div>
 
-                        <video
-                            src={data.videoUrl}
-                            controls
-                            autoPlay
-                            className="w-full rounded-2xl border border-gray-200 shadow"
-                        />
+                        {/* Video player */}
+                        <div className="w-full bg-black overflow-hidden rounded-3xl border border-gray-200">
+                            <video
+                                src={data.videoUrl}
+                                controls
+                                autoPlay
+                                className="w-full max-h-[60vh] object-contain"
+                            />
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-3">
+                            <a
+                                href={data.videoUrl}
+                                download={`video-${jobId}.mp4`}
+                                className="flex items-center gap-2 px-5 py-2.5 bg-black text-white text-xs font-semibold uppercase tracking-wider rounded-xl hover:bg-gray-800 active:scale-[0.98] transition-all"
+                            >
+                                <Download className="w-3.5 h-3.5" />
+                                Download
+                            </a>
+
+                            <button
+                                onClick={() => router.push(`/player?videoId=${data.videoId}`)}
+                                className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-black text-xs font-semibold uppercase tracking-wider rounded-xl hover:bg-gray-200 active:scale-[0.98] transition-all"
+                            >
+                                <Pencil className="w-3.5 h-3.5" />
+                                Edit
+                            </button>
+                        </div>
 
                     </div>
                 )}
@@ -171,7 +189,7 @@ export default function RenderViewPage() {
                 {/* Failed */}
                 {!error && data && isFailed(data.status) && (
                     <div className="bg-red-50 border border-red-200 rounded-xl px-6 py-5 flex gap-3 items-center">
-                        <XCircle className="text-red-500 w-5 h-5" />
+                        <XCircle className="text-red-500 w-5 h-5 shrink-0" />
                         <span className="text-red-700 text-sm font-medium">
                             {formatStatus(data.status)}
                         </span>
