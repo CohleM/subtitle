@@ -32,7 +32,7 @@ const VideoPlayer = memo(function VideoPlayer({
     compositionWidth,
     compositionHeight,
     captionPadding,
-    customStyleConfigs,
+    customStyleConfigs, // this can be undefined
     videoUrl,
     videoInfo
 }: {
@@ -41,7 +41,7 @@ const VideoPlayer = memo(function VideoPlayer({
     compositionWidth: number;
     compositionHeight: number;
     captionPadding: number;
-    customStyleConfigs?: Record<string, SubtitleStyleConfig>;
+    customStyleConfigs?: SubtitleStyleConfig; // ← mark as optional here
     videoUrl: string;
     videoInfo: VideoInfo
 }) {
@@ -49,9 +49,14 @@ const VideoPlayer = memo(function VideoPlayer({
         transcript,
         style: selectedStyle,
         captionPadding,
-        customStyleConfigs,
+        customStyleConfigs: customStyleConfigs ?? defaultStyleConfigs[selectedStyle], // ← provide default, never undefined
         videoUrl,
-        videoInfo
+        videoInfo: {
+            width: videoInfo.width,
+            height: videoInfo.height,
+            durationInFrames: Math.floor(videoInfo.duration * videoInfo.fps),
+            fps: videoInfo.fps
+        }
     }), [transcript, selectedStyle, captionPadding, customStyleConfigs, videoUrl, videoInfo]);
 
     return (
@@ -87,7 +92,7 @@ export default function Page() {
     const [isPortrait, setIsPortrait] = useState(true);
     const [selectedStyle, setSelectedStyle] = useState('basic');
     const [editingStyle, setEditingStyle] = useState<string | null>(null);
-    const [customConfigs, setCustomConfigs] = useState<Record<string, SubtitleStyleConfig>>({});
+    const [customConfig, setCustomConfig] = useState<SubtitleStyleConfig | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [lowresUrl, setLowresUrl] = useState('')
     const [videoInfo, setVideoInfo] = useState<VideoInfo>({ width: 0, height: 0, duration: 0, fps: 0 });
@@ -101,6 +106,7 @@ export default function Page() {
     const [originalEditingConfig, setOriginalEditingConfig] = useState<SubtitleStyleConfig | null>(null);
     const [isSavingStyle, setIsSavingStyle] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+
     useEffect(() => {
         const loadVideoData = async () => {
             if (!videoId) return;
@@ -137,13 +143,7 @@ export default function Page() {
                 const transcriptFromStyle = styleTableData?.styled_transcript || [];
 
                 setTranscript(transcriptFromStyle);
-                if (currentStyle && currentStyle.id) {
-                    setCustomConfigs({
-                        [currentStyle.id]: currentStyle
-                    });
-                } else {
-                    setCustomConfigs({});
-                }
+                setCustomConfig(currentStyle ?? null);
                 setSelectedStyle(styleKey);
                 setLowresUrl(video.low_res_url);
                 setVideoInfo({
@@ -169,30 +169,26 @@ export default function Page() {
     const [captionPadding, setCaptionPadding] = useState(540);
 
     const currentStyleConfig = useMemo(() => {
-        return customConfigs[selectedStyle] || defaultStyleConfigs[selectedStyle];
-    }, [customConfigs, selectedStyle]);
+        return customConfig || defaultStyleConfigs[selectedStyle];
+    }, [customConfig, selectedStyle]);
 
     // Check if there are unsaved changes in the editor
     const hasUnsavedChanges = useMemo(() => {
         if (!editingStyle || !originalEditingConfig) return false;
-        const currentConfig = customConfigs[editingStyle];
-        return JSON.stringify(currentConfig) !== JSON.stringify(originalEditingConfig);
-    }, [customConfigs, editingStyle, originalEditingConfig]);
+        return JSON.stringify(customConfig) !== JSON.stringify(originalEditingConfig);
+    }, [customConfig, editingStyle, originalEditingConfig]);
 
-    const handleStyleUpdate = (config: SubtitleStyleConfig) => {
-        setCustomConfigs(prev => ({
-            ...prev,
-            [config.id]: config
-        }));
-    };
+    const handleStyleUpdate = useCallback((config: SubtitleStyleConfig) => {
+        setCustomConfig(config);
+    }, []);
 
     // Handle entering edit mode - store original config
     const handleEditStyle = useCallback((styleId: string) => {
         setEditingStyle(styleId);
-        // Store a deep copy of the original config for comparison
-        const configToEdit = customConfigs[styleId] || defaultStyleConfigs[styleId];
+        // Store a deep copy of the current config for comparison
+        const configToEdit = customConfig || defaultStyleConfigs[styleId];
         setOriginalEditingConfig(JSON.parse(JSON.stringify(configToEdit)));
-    }, [customConfigs]);
+    }, [customConfig]);
 
     // Handle exiting edit mode
     const handleBackFromEditor = useCallback(() => {
@@ -239,12 +235,9 @@ export default function Page() {
                 // Update the original config to match saved state
                 setOriginalEditingConfig(JSON.parse(JSON.stringify(config)));
 
-                // Update custom configs with server response
+                // Update custom config with server response
                 if (result.current_style) {
-                    setCustomConfigs(prev => ({
-                        ...prev,
-                        [config.id]: result.current_style
-                    }));
+                    setCustomConfig(result.current_style);
                 }
             }
 
@@ -310,10 +303,7 @@ export default function Page() {
                 setSelectedStyle(pendingStyleChange);
 
                 if (result.current_style) {
-                    setCustomConfigs(prev => ({
-                        ...prev,
-                        [pendingStyleChange]: result.current_style
-                    }));
+                    setCustomConfig(result.current_style);
                 }
             }
 
@@ -335,8 +325,6 @@ export default function Page() {
         const style = defaultStyleConfigs[pendingStyleChange];
         return style?.name || pendingStyleChange;
     }, [pendingStyleChange]);
-
-
 
     const handleExport = useCallback(async () => {
         if (!videoId) return;
@@ -373,6 +361,7 @@ export default function Page() {
             setIsExporting(false);
         }
     }, [videoId, apiUrl, accessToken]);
+
     if (isLoading) {
         return (
             <div className="h-screen flex items-center justify-center bg-white">
@@ -380,10 +369,6 @@ export default function Page() {
             </div>
         );
     }
-
-
-
-
 
     return (
         <div className="h-screen w-full bg-white flex flex-col overflow-hidden">
@@ -429,7 +414,7 @@ export default function Page() {
                                     compositionWidth={compositionWidth}
                                     compositionHeight={compositionHeight}
                                     captionPadding={captionPadding}
-                                    customStyleConfigs={customConfigs}
+                                    customStyleConfigs={customConfig ?? undefined}
                                     videoUrl={lowresUrl}
                                     videoInfo={videoInfo}
                                 />
@@ -456,7 +441,7 @@ export default function Page() {
                     <div className="h-full bg-white flex flex-col overflow-hidden rounded-l-3xl">
                         {editingStyle ? (
                             <StyleEditor
-                                config={customConfigs[editingStyle] || defaultStyleConfigs[editingStyle]}
+                                config={customConfig || defaultStyleConfigs[editingStyle]}
                                 onChange={handleStyleUpdate}
                                 onBack={handleBackFromEditor}
                                 onSave={handleSaveStyleConfig}
@@ -493,18 +478,17 @@ export default function Page() {
                                         onClick={handleExport}
                                         disabled={isExporting}
                                         className={`
-            px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl
-            transition-all
-            ${isExporting
+                                            px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl
+                                            transition-all
+                                            ${isExporting
                                                 ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                                 : 'bg-black text-white hover:bg-gray-800 active:scale-[0.98]'
                                             }
-        `}
+                                        `}
                                     >
                                         {isExporting ? "Exporting..." : "Export"}
                                     </button>
                                 </div>
-
 
                                 {activeTab === 'style' ? (
                                     <StyleSelector
