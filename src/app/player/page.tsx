@@ -100,7 +100,7 @@ export default function Page() {
     // Track original config for comparison to detect changes
     const [originalEditingConfig, setOriginalEditingConfig] = useState<SubtitleStyleConfig | null>(null);
     const [isSavingStyle, setIsSavingStyle] = useState(false);
-
+    const [isExporting, setIsExporting] = useState(false);
     useEffect(() => {
         const loadVideoData = async () => {
             if (!videoId) return;
@@ -336,6 +336,43 @@ export default function Page() {
         return style?.name || pendingStyleChange;
     }, [pendingStyleChange]);
 
+
+
+    const handleExport = useCallback(async () => {
+        if (!videoId) return;
+
+        setIsExporting(true);
+        setStyleChangeError(null);
+
+        try {
+            const response = await fetch(`${apiUrl}/videos/render?video_id=${videoId}`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || "Export failed");
+            }
+
+            const data = await response.json();
+            console.log("Render job created:", data.jobId);
+
+            // optional UI feedback
+            alert("Export started successfully!");
+
+        } catch (error) {
+            console.error("Export error:", error);
+            setStyleChangeError(
+                error instanceof Error ? error.message : "Export failed"
+            );
+        } finally {
+            setIsExporting(false);
+        }
+    }, [videoId, apiUrl, accessToken]);
     if (isLoading) {
         return (
             <div className="h-screen flex items-center justify-center bg-white">
@@ -343,6 +380,10 @@ export default function Page() {
             </div>
         );
     }
+
+
+
+
 
     return (
         <div className="h-screen w-full bg-white flex flex-col overflow-hidden">
@@ -428,20 +469,42 @@ export default function Page() {
                                     <div className="flex items-center gap-2 bg-gray-100/50 p-1 rounded-xl">
                                         <button
                                             onClick={() => setActiveTab('style')}
-                                            className={`px-5 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${activeTab === 'style' ? 'bg-white text-black' : 'text-gray-400'
+                                            className={`px-5 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${activeTab === 'style'
+                                                ? 'bg-white text-black'
+                                                : 'text-gray-400'
                                                 }`}
                                         >
                                             Style
                                         </button>
+
                                         <button
                                             onClick={() => setActiveTab('captions')}
-                                            className={`px-5 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${activeTab === 'captions' ? 'bg-white text-black' : 'text-gray-400'
+                                            className={`px-5 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${activeTab === 'captions'
+                                                ? 'bg-white text-black'
+                                                : 'text-gray-400'
                                                 }`}
                                         >
                                             Captions
                                         </button>
                                     </div>
+
+                                    {/* Export Button */}
+                                    <button
+                                        onClick={handleExport}
+                                        disabled={isExporting}
+                                        className={`
+            px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl
+            transition-all
+            ${isExporting
+                                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                : 'bg-black text-white hover:bg-gray-800 active:scale-[0.98]'
+                                            }
+        `}
+                                    >
+                                        {isExporting ? "Exporting..." : "Export"}
+                                    </button>
                                 </div>
+
 
                                 {activeTab === 'style' ? (
                                     <StyleSelector

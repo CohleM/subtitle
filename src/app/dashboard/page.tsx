@@ -174,6 +174,31 @@ export default function DashboardPage() {
         router.push(`/player?videoId=${project.id}`);
     };
 
+
+    const handleExport = async (videoId: number) => {
+        try {
+            const response = await fetch(`${apiUrl}/render?video_id=${videoId}`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || "Export failed");
+            }
+
+            const data = await response.json();
+            console.log("Render job created:", data.jobId);
+
+            alert("Export started successfully!");
+        } catch (err) {
+            console.error(err);
+            alert("Export failed. Please try again.");
+        }
+    };
     return (
         <div className="h-screen w-full bg-white flex overflow-hidden">
             {/* Left Sidebar */}
