@@ -16,7 +16,7 @@ import { Navbar } from '../../components/DashboardNavbar';
 import { useSearchParams } from "next/navigation";
 import useLocalStorage from 'use-local-storage';
 import { AlertCircle } from 'lucide-react';
-
+import { useRouter } from 'next/navigation';
 import { StyleChangeDialog } from '../../components/StyleChangeDialogue';
 
 type VideoInfo = {
@@ -96,7 +96,7 @@ export default function Page() {
     const [isLoading, setIsLoading] = useState(true);
     const [lowresUrl, setLowresUrl] = useState('')
     const [videoInfo, setVideoInfo] = useState<VideoInfo>({ width: 0, height: 0, duration: 0, fps: 0 });
-
+    const router = useRouter();
     // New state for style change dialog
     const [pendingStyleChange, setPendingStyleChange] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -347,6 +347,7 @@ export default function Page() {
             }
 
             const data = await response.json();
+            router.push(`/view/${data.jobId}`)
             console.log("Render job created:", data.jobId);
 
             // optional UI feedback
