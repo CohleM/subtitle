@@ -203,6 +203,18 @@ export default function DashboardPage() {
         }
     }, []);
 
+    const getDisplayTime = (project: Project) => {
+        const created = new Date(project.created_at).getTime();
+        const updated = project.updated_at ? new Date(project.updated_at).getTime() : 0;
+
+        // Return the more recent timestamp
+        if (updated > created) {
+            return { time: project.updated_at, label: 'updated' };
+        }
+        return { time: project.created_at, label: 'created' };
+    };
+
+
     // ─── Helpers ─────────────────────────────────────────────────────────────
     const getRelativeTime = (dateString: string) => {
         const date = new Date(dateString);
@@ -365,101 +377,110 @@ export default function DashboardPage() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-4 gap-3">
-                                    {[...projects].reverse().map((project) => {
-                                        const processing = isProcessing(project);
-                                        const clickable = isClickable(project);
+                                    {[...projects]
+                                        .sort((a, b) => {
+                                            const aDate = new Date(a.updated_at || a.created_at).getTime();
+                                            const bDate = new Date(b.updated_at || b.created_at).getTime();
+                                            return bDate - aDate; // newest first
+                                        })
+                                        .map((project) => {
+                                            const processing = isProcessing(project);
+                                            const clickable = isClickable(project);
 
-                                        return (
-                                            <div
-                                                key={project.id}
-                                                onClick={() => handleCardClick(project)}
-                                                className={`
-                                                    bg-white rounded-lg border overflow-hidden transition-all duration-200 group
-                                                    ${clickable
-                                                        ? 'border-gray-200 hover:shadow-sm cursor-pointer'
-                                                        : 'border-gray-100 cursor-not-allowed opacity-80'
-                                                    }
-                                                `}
-                                            >
-                                                {/* Thumbnail */}
-                                                <div className="aspect-video bg-gray-100 relative overflow-hidden">
-                                                    {project.low_res_url ? (
-                                                        <video src={project.low_res_url} className="w-full h-full object-cover" muted playsInline />
-                                                    ) : project.original_url ? (
-                                                        <video src={project.original_url} className="w-full h-full object-cover" muted playsInline />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center">
-                                                            <Video className="w-6 h-6 text-gray-300" />
-                                                        </div>
-                                                    )}
-
-                                                    {/* ── Processing overlay ── */}
-                                                    {processing && (
-                                                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 px-4">
-                                                            <Loader2 className="w-5 h-5 text-white animate-spin" />
-                                                            <p className="text-[10px] text-white/90 font-medium text-center leading-tight">
-                                                                {getStepLabel(project.current_step)}
-                                                            </p>
-                                                            {/* Progress bar */}
-                                                            <div className="w-full h-0.5 bg-white/20 rounded-full overflow-hidden">
-                                                                <div
-                                                                    className="h-full bg-white rounded-full transition-all duration-700 ease-out"
-                                                                    style={{ width: `${project.progress ?? 0}%` }}
-                                                                />
+                                            return (
+                                                <div
+                                                    key={project.id}
+                                                    onClick={() => handleCardClick(project)}
+                                                    className={`
+            bg-white rounded-lg border overflow-hidden transition-all duration-200 group
+            ${clickable
+                                                            ? 'border-gray-200 hover:shadow-sm cursor-pointer'
+                                                            : 'border-gray-100 cursor-not-allowed opacity-80'
+                                                        }
+          `}
+                                                >
+                                                    {/* Thumbnail */}
+                                                    <div className="aspect-video bg-gray-100 relative overflow-hidden">
+                                                        {project.low_res_url ? (
+                                                            <video src={project.low_res_url} className="w-full h-full object-cover" muted playsInline />
+                                                        ) : project.original_url ? (
+                                                            <video src={project.original_url} className="w-full h-full object-cover" muted playsInline />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center">
+                                                                <Video className="w-6 h-6 text-gray-300" />
                                                             </div>
-                                                            <p className="text-[9px] text-white/50 font-medium tabular-nums">
-                                                                {project.progress ?? 0}%
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                                        )}
 
-                                                    {/* ── Status badges (non-processing) ── */}
-                                                    {project.status === 'error' && (
-                                                        <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-red-500/90 backdrop-blur-sm rounded text-[9px] font-medium text-white uppercase tracking-wider">
-                                                            Error
-                                                        </div>
-                                                    )}
-                                                    {project.status === 'uploaded' && (
-                                                        <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-gray-500/80 backdrop-blur-sm rounded text-[9px] font-medium text-white uppercase tracking-wider">
-                                                            Pending
-                                                        </div>
-                                                    )}
+                                                        {/* ── Processing overlay ── */}
+                                                        {processing && (
+                                                            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 px-4">
+                                                                <Loader2 className="w-5 h-5 text-white animate-spin" />
+                                                                <p className="text-[10px] text-white/90 font-medium text-center leading-tight">
+                                                                    {getStepLabel(project.current_step)}
+                                                                </p>
+                                                                {/* Progress bar */}
+                                                                <div className="w-full h-0.5 bg-white/20 rounded-full overflow-hidden">
+                                                                    <div
+                                                                        className="h-full bg-white rounded-full transition-all duration-700 ease-out"
+                                                                        style={{ width: `${project.progress ?? 0}%` }}
+                                                                    />
+                                                                </div>
+                                                                <p className="text-[9px] text-white/50 font-medium tabular-nums">
+                                                                    {project.progress ?? 0}%
+                                                                </p>
+                                                            </div>
+                                                        )}
 
-                                                    {/* ── Hover actions — only when ready ── */}
-                                                    {clickable && (
-                                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
-                                                            <button
-                                                                onClick={(e) => handleEdit(e, project)}
-                                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black text-[11px] font-semibold rounded-lg hover:bg-gray-100 active:scale-95 transition-all"
-                                                            >
-                                                                <Pencil className="w-3 h-3" />
-                                                                Edit
-                                                            </button>
-                                                            {project.render_job_id && (
+                                                        {/* ── Status badges (non-processing) ── */}
+                                                        {project.status === 'error' && (
+                                                            <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-red-500/90 backdrop-blur-sm rounded text-[9px] font-medium text-white uppercase tracking-wider">
+                                                                Error
+                                                            </div>
+                                                        )}
+                                                        {project.status === 'uploaded' && (
+                                                            <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-gray-500/80 backdrop-blur-sm rounded text-[9px] font-medium text-white uppercase tracking-wider">
+                                                                Pending
+                                                            </div>
+                                                        )}
+
+                                                        {/* ── Hover actions — only when ready ── */}
+                                                        {clickable && (
+                                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
                                                                 <button
-                                                                    onClick={(e) => handleView(e, project)}
-                                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-[11px] font-semibold rounded-lg hover:bg-gray-800 active:scale-95 transition-all"
+                                                                    onClick={(e) => handleEdit(e, project)}
+                                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black text-[11px] font-semibold rounded-lg hover:bg-gray-100 active:scale-95 transition-all"
                                                                 >
-                                                                    <Eye className="w-3 h-3" />
-                                                                    View
+                                                                    <Pencil className="w-3 h-3" />
+                                                                    Edit
                                                                 </button>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                                {project.render_job_id && (
+                                                                    <button
+                                                                        onClick={(e) => handleView(e, project)}
+                                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-[11px] font-semibold rounded-lg hover:bg-gray-800 active:scale-95 transition-all"
+                                                                    >
+                                                                        <Eye className="w-3 h-3" />
+                                                                        View
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
 
-                                                {/* Card footer */}
-                                                <div className="p-3">
-                                                    <h3 className="text-xs font-medium text-gray-900 mb-0.5 truncate">
-                                                        {project.name || `Video ${project.id}`}
-                                                    </h3>
-                                                    <p className="text-[10px] text-gray-500">
-                                                        {getRelativeTime(project.created_at)}
-                                                    </p>
+                                                    {/* Card footer */}
+                                                    <div className="p-3">
+                                                        <h3 className="text-xs font-medium text-gray-900 mb-0.5 truncate">
+                                                            {project.name || `Video ${project.id}`}
+                                                        </h3>
+                                                        <p className="text-[10px] text-gray-500">
+                                                            {(() => {
+                                                                const { time, label } = getDisplayTime(project);
+                                                                return `${label} ${getRelativeTime(time)}`;
+                                                            })()}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
                                 </div>
                             )}
                         </div>
