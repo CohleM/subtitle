@@ -3,10 +3,8 @@
 import { Player } from '@remotion/player';
 import { useEffect, useState, useMemo, memo, useCallback, useRef } from 'react';
 import { Plus, Trash2, Monitor, Maximize, Wand2 } from 'lucide-react';
-import transcriptJson from '../../data/transcript_30_min.json';
 import { SubtitleGroup } from '../../../types/subtitles';
 import { Main } from '../../remotion/Main';
-import { TranscriptEditor } from '../../components/TranscriptEditor';
 import { StyleSelector } from '../../components/StyleSelector';
 import { SubtitleStyleConfig } from '../../../types/style';
 import { defaultStyleConfigs } from '../../config/styleConfigs';
@@ -15,7 +13,7 @@ import { OptimizedTranscriptEditor } from '../../components/OptimizedTranscriptE
 import { Navbar } from '../../components/DashboardNavbar';
 import { useSearchParams } from "next/navigation";
 import useLocalStorage from 'use-local-storage';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Save } from 'lucide-react'; // Add Save icon
 import { useRouter } from 'next/navigation';
 import { StyleChangeDialog } from '../../components/StyleChangeDialogue';
 
@@ -32,7 +30,7 @@ const VideoPlayer = memo(function VideoPlayer({
     compositionWidth,
     compositionHeight,
     captionPadding,
-    customStyleConfigs, // this can be undefined
+    customStyleConfigs,
     videoUrl,
     videoInfo
 }: {
@@ -41,7 +39,7 @@ const VideoPlayer = memo(function VideoPlayer({
     compositionWidth: number;
     compositionHeight: number;
     captionPadding: number;
-    customStyleConfigs?: SubtitleStyleConfig; // ← mark as optional here
+    customStyleConfigs?: SubtitleStyleConfig;
     videoUrl: string;
     videoInfo: VideoInfo
 }) {
@@ -49,7 +47,7 @@ const VideoPlayer = memo(function VideoPlayer({
         transcript,
         style: selectedStyle,
         captionPadding,
-        customStyleConfigs: customStyleConfigs ?? defaultStyleConfigs[selectedStyle], // ← provide default, never undefined
+        customStyleConfigs: customStyleConfigs ?? defaultStyleConfigs[selectedStyle],
         videoUrl,
         videoInfo: {
             width: videoInfo.width,
@@ -97,12 +95,19 @@ export default function Page() {
     const [lowresUrl, setLowresUrl] = useState('')
     const [videoInfo, setVideoInfo] = useState<VideoInfo>({ width: 0, height: 0, duration: 0, fps: 0 });
     const router = useRouter();
-    // New state for style change dialog
+
+    // NEW: Store the style table ID for auto-saving
+    const [currentStyleTableId, setCurrentStyleTableId] = useState<number | null>(null);
+
+    // NEW: Auto-save states
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const lastSavedTranscriptRef = useRef<string>('');
+
     const [pendingStyleChange, setPendingStyleChange] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [styleChangeError, setStyleChangeError] = useState<string | null>(null);
 
-    // Track original config for comparison to detect changes
     const [originalEditingConfig, setOriginalEditingConfig] = useState<SubtitleStyleConfig | null>(null);
     const [isSavingStyle, setIsSavingStyle] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
@@ -127,10 +132,13 @@ export default function Page() {
                 const styleKey = currentStyle?.id || "basic";
                 const styleId = video.all_styles_mapping[styleKey];
 
-                console.log('current style gg yolo haha ', currentStyle)
+                console.log('current style:', currentStyle, 'styleKey:', styleKey, 'styleId:', styleId);
 
                 let styleTableData = null;
                 if (styleId) {
+                    // NEW: Store the numeric ID for auto-saving
+                    setCurrentStyleTableId(styleId);
+
                     const styleRes = await fetch(`${apiUrl}/styles/${styleId}`, {
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
@@ -141,6 +149,9 @@ export default function Page() {
                 }
 
                 const transcriptFromStyle = styleTableData?.styled_transcript || [];
+
+                // NEW: Store hash of initial transcript to avoid unnecessary saves
+                lastSavedTranscriptRef.current = JSON.stringify(transcriptFromStyle);
 
                 setTranscript(transcriptFromStyle);
                 setCustomConfig(currentStyle ?? null);
@@ -164,6 +175,73 @@ export default function Page() {
         loadVideoData();
     }, [videoId, apiUrl, accessToken]);
 
+    // NEW: Debounced auto-save effect
+    useEffect(() => {
+        // Don't save if loading, no style ID, or empty transcript
+        if (isLoading || !currentStyleTableId || transcript.length === 0) return;
+
+        // Don't save if transcript hasn't changed from last saved version
+        const currentTranscriptHash = JSON.stringify(transcript);
+        if (currentTranscriptHash === lastSavedTranscriptRef.current) return;
+
+        // Clear existing timeout
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+
+        // Set status to indicate pending save
+        setSaveStatus('idle');
+
+        // Debounced save
+        saveTimeoutRef.current = setTimeout(async () => {
+            setSaveStatus('saving');
+
+            try {
+                const response = await fetch(`${apiUrl}/styles/${currentStyleTableId}/transcript`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({ styled_transcript: transcript }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Save failed: ${response.status}`);
+                }
+
+                // Update last saved hash
+                lastSavedTranscriptRef.current = currentTranscriptHash;
+                setSaveStatus('saved');
+
+                // Clear "saved" status after 2 seconds
+                setTimeout(() => setSaveStatus('idle'), 2000);
+
+            } catch (error) {
+                console.error('Auto-save failed:', error);
+                setSaveStatus('error');
+                // Don't show error toast for auto-save to avoid annoyance
+                // Just log it and show indicator
+            }
+        }, 800); // 800ms debounce - adjust as needed (lower = more frequent saves)
+
+        // Cleanup timeout on unmount or transcript change
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, [transcript, currentStyleTableId, apiUrl, accessToken, isLoading]);
+
+    // NEW: Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, []);
+
     const compositionWidth = isPortrait ? 1080 : 1920;
     const compositionHeight = isPortrait ? 1920 : 1080;
     const [captionPadding, setCaptionPadding] = useState(540);
@@ -172,7 +250,6 @@ export default function Page() {
         return customConfig || defaultStyleConfigs[selectedStyle];
     }, [customConfig, selectedStyle]);
 
-    // Check if there are unsaved changes in the editor
     const hasUnsavedChanges = useMemo(() => {
         if (!editingStyle || !originalEditingConfig) return false;
         return JSON.stringify(customConfig) !== JSON.stringify(originalEditingConfig);
@@ -182,21 +259,17 @@ export default function Page() {
         setCustomConfig(config);
     }, []);
 
-    // Handle entering edit mode - store original config
     const handleEditStyle = useCallback((styleId: string) => {
         setEditingStyle(styleId);
-        // Store a deep copy of the current config for comparison
         const configToEdit = customConfig || defaultStyleConfigs[styleId];
         setOriginalEditingConfig(JSON.parse(JSON.stringify(configToEdit)));
     }, [customConfig]);
 
-    // Handle exiting edit mode
     const handleBackFromEditor = useCallback(() => {
         setEditingStyle(null);
         setOriginalEditingConfig(null);
     }, []);
 
-    // Save style config to backend
     const handleSaveStyleConfig = useCallback(async (config: SubtitleStyleConfig): Promise<void> => {
         if (!videoId) return;
 
@@ -227,15 +300,13 @@ export default function Page() {
             console.log('Style save result:', result);
 
             if (result.success) {
-                // Update transcript if new one was generated
                 if (result.result) {
                     setTranscript(result.result);
+                    lastSavedTranscriptRef.current = JSON.stringify(result.result);
                 }
 
-                // Update the original config to match saved state
                 setOriginalEditingConfig(JSON.parse(JSON.stringify(config)));
 
-                // Update custom config with server response
                 if (result.current_style) {
                     setCustomConfig(result.current_style);
                 }
@@ -244,13 +315,12 @@ export default function Page() {
         } catch (error) {
             console.error('Error saving style:', error);
             setStyleChangeError(error instanceof Error ? error.message : 'Failed to save style');
-            throw error; // Re-throw so editor can handle it
+            throw error;
         } finally {
             setIsSavingStyle(false);
         }
     }, [videoId, apiUrl, accessToken]);
 
-    // Handle style selection - show confirmation dialog
     const handleStyleSelect = useCallback((styleId: string) => {
         if (styleId === selectedStyle) return;
 
@@ -263,7 +333,6 @@ export default function Page() {
         setPendingStyleChange(styleId);
     }, [selectedStyle]);
 
-    // Handle confirmed style change
     const handleConfirmStyleChange = useCallback(async () => {
         if (!pendingStyleChange || !videoId) return;
 
@@ -298,12 +367,18 @@ export default function Page() {
             if (result.success) {
                 if (result.result) {
                     setTranscript(result.result);
+                    lastSavedTranscriptRef.current = JSON.stringify(result.result);
                 }
 
                 setSelectedStyle(pendingStyleChange);
 
                 if (result.current_style) {
                     setCustomConfig(result.current_style);
+                }
+
+                // NEW: Update style table ID if it changed
+                if (result.style_id) {
+                    setCurrentStyleTableId(result.style_id);
                 }
             }
 
@@ -350,7 +425,6 @@ export default function Page() {
             router.push(`/view/${data.jobId}`)
             console.log("Render job created:", data.jobId);
 
-            // optional UI feedback
             alert("Export started successfully!");
 
         } catch (error) {
@@ -361,7 +435,7 @@ export default function Page() {
         } finally {
             setIsExporting(false);
         }
-    }, [videoId, apiUrl, accessToken]);
+    }, [videoId, apiUrl, accessToken, router]);
 
     if (isLoading) {
         return (
@@ -474,21 +548,42 @@ export default function Page() {
                                         </button>
                                     </div>
 
-                                    {/* Export Button */}
-                                    <button
-                                        onClick={handleExport}
-                                        disabled={isExporting}
-                                        className={`
-                                            px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl
-                                            transition-all
-                                            ${isExporting
-                                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                                : 'bg-black text-white hover:bg-gray-800 active:scale-[0.98]'
-                                            }
-                                        `}
-                                    >
-                                        {isExporting ? "Exporting..." : "Export"}
-                                    </button>
+                                    <div className="flex items-center gap-3">
+                                        {/* NEW: Save Status Indicator */}
+                                        {activeTab === 'captions' && (
+                                            <div className={`
+                                                flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
+                                                ${saveStatus === 'saving' ? 'text-amber-600 bg-amber-50' : ''}
+                                                ${saveStatus === 'saved' ? 'text-green-600 bg-green-50' : ''}
+                                                ${saveStatus === 'error' ? 'text-red-600 bg-red-50' : ''}
+                                                ${saveStatus === 'idle' ? 'text-gray-400' : ''}
+                                            `}>
+                                                <Save className="w-3.5 h-3.5" />
+                                                <span>
+                                                    {saveStatus === 'saving' && 'Saving...'}
+                                                    {saveStatus === 'saved' && 'Saved'}
+                                                    {saveStatus === 'error' && 'Save failed'}
+                                                    {saveStatus === 'idle' && ''}
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {/* Export Button */}
+                                        <button
+                                            onClick={handleExport}
+                                            disabled={isExporting}
+                                            className={`
+                                                px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl
+                                                transition-all
+                                                ${isExporting
+                                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                    : 'bg-black text-white hover:bg-gray-800 active:scale-[0.98]'
+                                                }
+                                            `}
+                                        >
+                                            {isExporting ? "Exporting..." : "Export"}
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {activeTab === 'style' ? (
@@ -499,7 +594,11 @@ export default function Page() {
                                     />
                                 ) : (
                                     <div className="flex-1 overflow-y-auto min-h-0">
-                                        <OptimizedTranscriptEditor transcript={transcript} setTranscript={setTranscript} />
+                                        {/* Pass setTranscript directly - auto-save handles the backend */}
+                                        <OptimizedTranscriptEditor
+                                            transcript={transcript}
+                                            setTranscript={setTranscript}
+                                        />
                                     </div>
                                 )}
                             </>
