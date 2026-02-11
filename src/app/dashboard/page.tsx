@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../components/DashboardNavbar';
-import { Upload, Video } from 'lucide-react';
+import { Upload, Video, Pencil, Eye } from 'lucide-react';
 import useLocalStorage from 'use-local-storage';
 
 type UploadState = 'idle' | 'uploading' | 'success' | 'error';
@@ -18,6 +18,7 @@ interface Project {
     current_style?: any;
     style_id?: number;
     transcript?: any;
+    render_job_id?: any
 }
 
 export default function DashboardPage() {
@@ -55,7 +56,7 @@ export default function DashboardPage() {
             }
 
             const data = await response.json();
-            console.log('data', data)
+            console.log('videos data', data)
             setProjects(data);
         } catch (err) {
             console.error('Error fetching projects:', err);
@@ -170,10 +171,17 @@ export default function DashboardPage() {
         return `${Math.floor(diffInSeconds / 2592000)} months ago`;
     };
 
-    const handleProjectClick = (project: Project) => {
+    const handleEdit = (e: React.MouseEvent, project: Project) => {
+        e.stopPropagation();
         router.push(`/player?videoId=${project.id}`);
     };
 
+    const handleView = (e: React.MouseEvent, project: Project) => {
+        e.stopPropagation();
+        if (project.render_job_id) {
+            router.push(`/view/${project.render_job_id}`);
+        }
+    };
 
     const handleExport = async (videoId: number) => {
         try {
@@ -199,6 +207,7 @@ export default function DashboardPage() {
             alert("Export failed. Please try again.");
         }
     };
+
     return (
         <div className="h-screen w-full bg-white flex overflow-hidden">
             {/* Left Sidebar */}
@@ -348,12 +357,12 @@ export default function DashboardPage() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-4 gap-3">
-                                    {projects.map((project) => (
+                                    {[...projects].reverse().map((project) => (
                                         <div
                                             key={project.id}
-                                            onClick={() => handleProjectClick(project)}
                                             className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-sm transition-shadow cursor-pointer group"
                                         >
+                                            {/* Thumbnail area */}
                                             <div className="aspect-video bg-gray-100 relative">
                                                 {project.low_res_url ? (
                                                     <video
@@ -375,25 +384,46 @@ export default function DashboardPage() {
                                                     </div>
                                                 )}
 
+                                                {/* Status badges */}
                                                 {project.status === 'processing' && (
                                                     <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-black/80 backdrop-blur-sm rounded text-[9px] font-medium text-white uppercase tracking-wider">
                                                         Processing
                                                     </div>
                                                 )}
-
                                                 {project.status === 'uploading' && (
                                                     <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-blue-500/80 backdrop-blur-sm rounded text-[9px] font-medium text-white uppercase tracking-wider">
                                                         Uploading
                                                     </div>
                                                 )}
-
                                                 {project.status === 'error' && (
                                                     <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-red-500/80 backdrop-blur-sm rounded text-[9px] font-medium text-white uppercase tracking-wider">
                                                         Error
                                                     </div>
                                                 )}
+
+                                                {/* Hover overlay with action buttons */}
+                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={(e) => handleEdit(e, project)}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black text-[11px] font-semibold rounded-lg hover:bg-gray-100 active:scale-95 transition-all"
+                                                    >
+                                                        <Pencil className="w-3 h-3" />
+                                                        Edit
+                                                    </button>
+
+                                                    {project.render_job_id && (
+                                                        <button
+                                                            onClick={(e) => handleView(e, project)}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-[11px] font-semibold rounded-lg hover:bg-gray-800 active:scale-95 transition-all"
+                                                        >
+                                                            <Eye className="w-3 h-3" />
+                                                            View
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
 
+                                            {/* Card footer */}
                                             <div className="p-3">
                                                 <h3 className="text-xs font-medium text-gray-900 mb-0.5 group-hover:text-black transition-colors truncate">
                                                     {project.name || `Video ${project.id}`}
