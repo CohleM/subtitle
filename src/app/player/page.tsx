@@ -13,7 +13,7 @@ import { OptimizedTranscriptEditor } from '../../components/OptimizedTranscriptE
 import { Navbar } from '../../components/DashboardNavbar';
 import { useSearchParams } from "next/navigation";
 import useLocalStorage from 'use-local-storage';
-import { AlertCircle, Save } from 'lucide-react'; // Add Save icon
+import { AlertCircle, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { StyleChangeDialog } from '../../components/StyleChangeDialogue';
 
@@ -99,10 +99,15 @@ export default function Page() {
     // NEW: Store the style table ID for auto-saving
     const [currentStyleTableId, setCurrentStyleTableId] = useState<number | null>(null);
 
-    // NEW: Auto-save states
+    // NEW: Auto-save states for transcript
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const lastSavedTranscriptRef = useRef<string>('');
+
+    // NEW: Auto-save states for caption padding
+    const [paddingSaveStatus, setPaddingSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+    const paddingSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const lastSavedPaddingRef = useRef<number>(0);
 
     const [pendingStyleChange, setPendingStyleChange] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -111,6 +116,9 @@ export default function Page() {
     const [originalEditingConfig, setOriginalEditingConfig] = useState<SubtitleStyleConfig | null>(null);
     const [isSavingStyle, setIsSavingStyle] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+    const compositionWidth = isPortrait ? 1080 : 1920;
+    const compositionHeight = isPortrait ? 1920 : 1080;
+    const [captionPadding, setCaptionPadding] = useState(0);
 
     useEffect(() => {
         const loadVideoData = async () => {
@@ -131,12 +139,12 @@ export default function Page() {
                 const currentStyle = video.current_style;
                 const styleKey = currentStyle?.id || "basic";
                 const styleId = video.all_styles_mapping[styleKey];
+                const capPadding = video.caption_padding || 0
 
                 console.log('current style:', currentStyle, 'styleKey:', styleKey, 'styleId:', styleId);
 
                 let styleTableData = null;
                 if (styleId) {
-                    // NEW: Store the numeric ID for auto-saving
                     setCurrentStyleTableId(styleId);
 
                     const styleRes = await fetch(`${apiUrl}/styles/${styleId}`, {
@@ -150,9 +158,10 @@ export default function Page() {
 
                 const transcriptFromStyle = styleTableData?.styled_transcript || [];
 
-                // NEW: Store hash of initial transcript to avoid unnecessary saves
                 lastSavedTranscriptRef.current = JSON.stringify(transcriptFromStyle);
+                lastSavedPaddingRef.current = capPadding;
 
+                setCaptionPadding(capPadding)
                 setTranscript(transcriptFromStyle);
                 setCustomConfig(currentStyle ?? null);
                 setSelectedStyle(styleKey);
@@ -175,24 +184,19 @@ export default function Page() {
         loadVideoData();
     }, [videoId, apiUrl, accessToken]);
 
-    // NEW: Debounced auto-save effect
+    // NEW: Debounced auto-save effect for TRANSCRIPT
     useEffect(() => {
-        // Don't save if loading, no style ID, or empty transcript
         if (isLoading || !currentStyleTableId || transcript.length === 0) return;
 
-        // Don't save if transcript hasn't changed from last saved version
         const currentTranscriptHash = JSON.stringify(transcript);
         if (currentTranscriptHash === lastSavedTranscriptRef.current) return;
 
-        // Clear existing timeout
         if (saveTimeoutRef.current) {
             clearTimeout(saveTimeoutRef.current);
         }
 
-        // Set status to indicate pending save
         setSaveStatus('idle');
 
-        // Debounced save
         saveTimeoutRef.current = setTimeout(async () => {
             setSaveStatus('saving');
 
@@ -210,22 +214,17 @@ export default function Page() {
                     throw new Error(`Save failed: ${response.status}`);
                 }
 
-                // Update last saved hash
                 lastSavedTranscriptRef.current = currentTranscriptHash;
                 setSaveStatus('saved');
 
-                // Clear "saved" status after 2 seconds
                 setTimeout(() => setSaveStatus('idle'), 2000);
 
             } catch (error) {
                 console.error('Auto-save failed:', error);
                 setSaveStatus('error');
-                // Don't show error toast for auto-save to avoid annoyance
-                // Just log it and show indicator
             }
-        }, 800); // 800ms debounce - adjust as needed (lower = more frequent saves)
+        }, 800);
 
-        // Cleanup timeout on unmount or transcript change
         return () => {
             if (saveTimeoutRef.current) {
                 clearTimeout(saveTimeoutRef.current);
@@ -233,18 +232,71 @@ export default function Page() {
         };
     }, [transcript, currentStyleTableId, apiUrl, accessToken, isLoading]);
 
-    // NEW: Cleanup on unmount
+    // NEW: Debounced auto-save effect for CAPTION PADDING
+    useEffect(() => {
+        if (isLoading || !videoId) return;
+
+        // Don't save if padding hasn't changed from last saved version
+        if (captionPadding === lastSavedPaddingRef.current) return;
+
+        // Clear existing timeout
+        if (paddingSaveTimeoutRef.current) {
+            clearTimeout(paddingSaveTimeoutRef.current);
+        }
+
+        // Set status to indicate pending save
+        setPaddingSaveStatus('idle');
+
+        // Debounced save - shorter delay for slider (300ms feels more responsive)
+        paddingSaveTimeoutRef.current = setTimeout(async () => {
+            setPaddingSaveStatus('saving');
+
+            try {
+                const response = await fetch(`${apiUrl}/videos/${videoId}/caption-padding`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({ caption_padding: captionPadding }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Save failed: ${response.status}`);
+                }
+
+                // Update last saved value
+                lastSavedPaddingRef.current = captionPadding;
+                setPaddingSaveStatus('saved');
+
+                // Clear "saved" status after 2 seconds
+                setTimeout(() => setPaddingSaveStatus('idle'), 2000);
+
+            } catch (error) {
+                console.error('Caption padding auto-save failed:', error);
+                setPaddingSaveStatus('error');
+            }
+        }, 5000); // 5000 sec for slider - more responsive than transcript
+
+        // Cleanup timeout on unmount or padding change
+        return () => {
+            if (paddingSaveTimeoutRef.current) {
+                clearTimeout(paddingSaveTimeoutRef.current);
+            }
+        };
+    }, [captionPadding, videoId, apiUrl, accessToken, isLoading]);
+
+    // Cleanup on unmount
     useEffect(() => {
         return () => {
             if (saveTimeoutRef.current) {
                 clearTimeout(saveTimeoutRef.current);
             }
+            if (paddingSaveTimeoutRef.current) {
+                clearTimeout(paddingSaveTimeoutRef.current);
+            }
         };
     }, []);
-
-    const compositionWidth = isPortrait ? 1080 : 1920;
-    const compositionHeight = isPortrait ? 1920 : 1080;
-    const [captionPadding, setCaptionPadding] = useState(540);
 
     const currentStyleConfig = useMemo(() => {
         return customConfig || defaultStyleConfigs[selectedStyle];
@@ -376,7 +428,6 @@ export default function Page() {
                     setCustomConfig(result.current_style);
                 }
 
-                // NEW: Update style table ID if it changed
                 if (result.style_id) {
                     setCurrentStyleTableId(result.style_id);
                 }
@@ -549,21 +600,21 @@ export default function Page() {
                                     </div>
 
                                     <div className="flex items-center gap-3">
-                                        {/* NEW: Save Status Indicator */}
+                                        {/* Combined Save Status Indicator */}
                                         {activeTab === 'captions' && (
                                             <div className={`
                                                 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                                                ${saveStatus === 'saving' ? 'text-amber-600 bg-amber-50' : ''}
-                                                ${saveStatus === 'saved' ? 'text-green-600 bg-green-50' : ''}
-                                                ${saveStatus === 'error' ? 'text-red-600 bg-red-50' : ''}
-                                                ${saveStatus === 'idle' ? 'text-gray-400' : ''}
+                                                ${(saveStatus === 'saving' || paddingSaveStatus === 'saving') ? 'text-amber-600 bg-amber-50' : ''}
+                                                ${(saveStatus === 'saved' && paddingSaveStatus === 'saved') ? 'text-green-600 bg-green-50' : ''}
+                                                ${(saveStatus === 'error' || paddingSaveStatus === 'error') ? 'text-red-600 bg-red-50' : ''}
+                                                ${(saveStatus === 'idle' && paddingSaveStatus === 'idle') ? 'text-gray-400' : ''}
                                             `}>
                                                 <Save className="w-3.5 h-3.5" />
                                                 <span>
-                                                    {saveStatus === 'saving' && 'Saving...'}
-                                                    {saveStatus === 'saved' && 'Saved'}
-                                                    {saveStatus === 'error' && 'Save failed'}
-                                                    {saveStatus === 'idle' && ''}
+                                                    {(saveStatus === 'saving' || paddingSaveStatus === 'saving') && 'Saving...'}
+                                                    {(saveStatus === 'saved' && paddingSaveStatus === 'saved') && 'Saved'}
+                                                    {(saveStatus === 'error' || paddingSaveStatus === 'error') && 'Save failed'}
+                                                    {(saveStatus === 'idle' && paddingSaveStatus === 'idle') && ''}
                                                 </span>
                                             </div>
                                         )}
@@ -594,7 +645,6 @@ export default function Page() {
                                     />
                                 ) : (
                                     <div className="flex-1 overflow-y-auto min-h-0">
-                                        {/* Pass setTranscript directly - auto-save handles the backend */}
                                         <OptimizedTranscriptEditor
                                             transcript={transcript}
                                             setTranscript={setTranscript}
