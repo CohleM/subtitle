@@ -630,8 +630,8 @@ function PlayerPageContent() {
                                                 px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl
                                                 transition-all
                                                 ${isExporting
-                                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                                    : 'bg-black text-white hover:bg-gray-800 active:scale-[0.98]'
+                                                    ? 'bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] cursor-not-allowed'
+                                                    : 'bg-[var(--color-primary)] text-[var(--color-bg)] hover:bg-[var(--color-primary-hover)] active:scale-[0.98]'
                                                 }
                                             `}
                                         >

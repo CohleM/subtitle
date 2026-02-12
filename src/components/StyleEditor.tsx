@@ -97,14 +97,14 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                 <div className="flex items-center gap-3">
                     <button
                         onClick={handleBack}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 hover:bg-[var(--color-bg-hover)] rounded-lg transition-colors"
                     >
-                        <ChevronLeft className="w-5 h-5 text-gray-600" />
+                        <ChevronLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
                     </button>
                     <div className="flex items-center gap-2">
-                        <span className="font-semibold text-gray-900">{localConfig.name}</span>
+                        <span className="font-semibold text-[var(--color-text)]">{localConfig.name}</span>
                         {hasChanges && (
-                            <span className="w-2 h-2 bg-orange-500 rounded-full" title="Unsaved changes" />
+                            <span className="w-2 h-2 bg-[var(--color-primary)] rounded-full" title="Unsaved changes" />
                         )}
                     </div>
                 </div>
@@ -113,13 +113,13 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                     onClick={handleSave}
                     disabled={isSaving || !hasChanges}
                     className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${hasChanges
-                            ? 'bg-black text-white hover:bg-gray-800'
-                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        ? 'bg-[var(--color-primary)] text-[var(--color-bg)] hover:bg-[var(--color-primary-hover)]'
+                        : 'bg-[var(--color-bg-hover)] text-[var(--color-text-light)] cursor-not-allowed'
                         }`}
                 >
                     {isSaving ? (
                         <>
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <div className="w-4 h-4 border-2 border-[var(--color-bg)]/30 border-t-[var(--color-bg)] rounded-full animate-spin" />
                             <span>Saving...</span>
                         </>
                     ) : (
@@ -137,16 +137,16 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
                     <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in-95">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                                <Save className="w-5 h-5 text-orange-600" />
+                            <div className="w-10 h-10 bg-[var(--color-primary)]/10 rounded-full flex items-center justify-center">
+                                <Save className="w-5 h-5 text-[var(--color-primary)]" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-900">Unsaved Changes</h3>
-                                <p className="text-sm text-gray-500">You have unsaved style modifications</p>
+                                <h3 className="text-lg font-semibold text-[var(--color-text)]">Unsaved Changes</h3>
+                                <p className="text-sm text-[var(--color-text-muted)]">You have unsaved style modifications</p>
                             </div>
                         </div>
 
-                        <p className="text-sm text-gray-600 mb-6">
+                        <p className="text-sm text-[var(--color-text-muted)] mb-6">
                             Would you like to save your changes before going back, or discard them?
                         </p>
 
@@ -161,7 +161,7 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                             <button
                                 onClick={handleConfirmBack}
                                 disabled={isSaving}
-                                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-black hover:bg-gray-800 rounded-xl transition-colors flex items-center justify-center gap-2"
+                                className="flex-1 px-4 py-2.5 text-sm font-medium text-[var(--color-bg)] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] rounded-xl transition-colors flex items-center justify-center gap-2"
                             >
                                 {isSaving ? (
                                     <>
@@ -187,7 +187,7 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                         key={type}
                         onClick={() => setActiveTab(type)}
                         className={`px-4 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all ${activeTab === type
-                            ? 'bg-black text-white'
+                            ? 'bg-[var(--color-primary)] text-[var(--color-bg)]'
                             : 'text-gray-600 hover:text-black hover:bg-gray-200'
                             }`}
                     >
@@ -241,7 +241,7 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                                     key={option}
                                     onClick={() => updateFontStyle(activeTab, { uppercase: option === 'Yes' })}
                                     className={`flex-1 py-3 text-xs font-medium rounded-xl border transition-all ${(currentFont.uppercase && option === 'Yes') || (!currentFont.uppercase && option === 'No')
-                                        ? 'border-black bg-gray-50 text-black'
+                                        ? 'border-[var(--color-primary)] bg-[var(--color-bg-secondary)] text-[var(--color-primary)]'
                                         : 'border-gray-200 text-gray-400 hover:border-gray-300'
                                         }`}
                                 >
@@ -310,7 +310,7 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                                 key={size}
                                 onClick={() => updateFontStyle(activeTab, { strokeWeight: size.toLowerCase() as any })}
                                 className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${currentFont.strokeWeight === size.toLowerCase()
-                                    ? 'bg-white text-black shadow-sm'
+                                    ? 'bg-[var(--color-bg-card)] text-[var(--color-primary)] shadow-sm'
                                     : 'text-gray-400 hover:text-gray-600'
                                     }`}
                             >
@@ -345,7 +345,7 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                                     key={size}
                                     onClick={() => updateFontStyle(activeTab, { shadow: size.toLowerCase() as any })}
                                     className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${currentFont.shadow === size.toLowerCase()
-                                        ? 'bg-white text-black shadow-sm'
+                                        ? 'bg-[var(--color-bg-card)] text-[var(--color-primary)] shadow-sm'
                                         : 'text-gray-400 hover:text-gray-600'
                                         }`}
                                 >

@@ -1,34 +1,58 @@
+/* styles/global.css */
 @import "tailwindcss";
 
 :root {
-  --background: #fff;
-  --foreground: #000;
-  --unfocused-border-color: #eaeaea;
-  --focused-border-color: #666;
+  /* Your chosen colors */
+  --color-primary: #FF3898;
+  --color-primary-hover: #f51682;
+  --color-text: #1E1E24;
+  --color-text-muted: #6b7280;
+  --color-text-light: #FF5FAC;
+  --color-bg: #f5f5f5;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-card: #ffffff;
+  --color-bg-hover: #f3f4f6;
+  --color-border: #e5e7eb;
+  --color-border-light: #f3f4f6;
 
+  /* Semantic mappings */
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+  --unfocused-border-color: var(--color-border);
+  --focused-border-color: #666;
   --button-disabled-color: #fafafa;
   --disabled-text-color: #999;
-
   --geist-border-radius: 5px;
   --geist-quarter-pad: 6px;
   --geist-half-pad: 12px;
   --geist-pad: 24px;
   --geist-font: "Inter";
-
   --geist-error: #e00;
-
-  --subtitle: #666;
+  --subtitle: var(--color-text-muted);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #000000;
-    --unfocused-border-color: #333;
+    /* Same colors for dark mode, or adjust if you want different dark theme */
+    --color-primary: #FF3898;
+    --color-primary-hover: #f51682;
+    --color-text: #1E1E24;
+    --color-text-muted: #6b7280;
+    --color-text-light: #FF5FAC;
+    --color-bg: #f5f5f5;
+    --color-bg-secondary: #f9fafb;
+    --color-bg-card: #ffffff;
+    --color-bg-hover: #f3f4f6;
+    --color-border: #e5e7eb;
+    --color-border-light: #f3f4f6;
+
+    --background: var(--color-bg);
+    --foreground: var(--color-text);
+    --unfocused-border-color: var(--color-border);
     --focused-border-color: #888;
-    --foreground: #fff;
     --button-disabled-color: #111;
     --geist-error: red;
-    --subtitle: #8d8d8d;
+    --subtitle: var(--color-text-muted);
   }
 }
 
@@ -41,6 +65,20 @@
   --color-disabled-text-color: var(--disabled-text-color);
   --color-geist-error: var(--geist-error);
   --color-subtitle: var(--subtitle);
+
+  /* Custom theme colors */
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-light: var(--color-text-light);
+  --color-bg: var(--color-bg);
+  --color-bg-secondary: var(--color-bg-secondary);
+  --color-bg-card: var(--color-bg-card);
+  --color-bg-hover: var(--color-bg-hover);
+  --color-border: var(--color-border);
+  --color-border-light: var(--color-border-light);
+
   --padding-geist-quarter: var(--geist-quarter-pad);
   --padding-geist-half: var(--geist-half-pad);
   --padding-geist: var(--geist-pad);
@@ -55,6 +93,7 @@
     0% {
       opacity: 1;
     }
+
     100% {
       opacity: 0.15;
     }

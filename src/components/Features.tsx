@@ -26,11 +26,11 @@ const features = [
 
 export function Features() {
     return (
-        <section id="features" className="py-24 px-6 bg-gray-50/50">
+        <section id="features" className="py-24 px-6 bg-[var(--color-bg-secondary)]">
             <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-16">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Features</p>
-                    <h2 className="text-3xl md:text-4xl font-bold text-black tracking-tight">
+                    <p className="text-xs font-semibold text-[var(--color-text-light)] uppercase tracking-widest mb-4">Features</p>
+                    <h2 className="text-3xl md:text-4xl font-bold text-[var(--color-text)] tracking-tight">
                         Everything you need
                     </h2>
                 </div>
@@ -39,13 +39,13 @@ export function Features() {
                     {features.map((feature) => (
                         <div
                             key={feature.title}
-                            className="group p-8 bg-white rounded-3xl border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all"
+                            className="group p-8 bg-[var(--color-bg-card)] rounded-3xl border border-[var(--color-border)] hover:border-[var(--color-border)] hover:shadow-lg transition-all"
                         >
-                            <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <feature.icon className="w-6 h-6 text-white" />
+                            <div className="w-12 h-12 bg-[var(--color-primary)] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <feature.icon className="w-6 h-6 text-[var(--color-bg)]" />
                             </div>
-                            <h3 className="text-lg font-semibold text-black mb-3">{feature.title}</h3>
-                            <p className="text-sm text-gray-500 leading-relaxed">{feature.description}</p>
+                            <h3 className="text-lg font-semibold text-[var(--color-text)] mb-3">{feature.title}</h3>
+                            <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">{feature.description}</p>
                         </div>
                     ))}
                 </div>

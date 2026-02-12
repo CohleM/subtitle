@@ -46,17 +46,17 @@ export default function Login() {
     return (
         <div className="flex min-h-screen">
             {/* Left side - Image/GIF */}
-            <div className="hidden lg:flex lg:w-1/2 bg-neutral-100 items-center justify-center p-12">
+            <div className="hidden lg:flex lg:w-1/2 bg-[var(--color-bg)] items-center justify-center p-12">
                 <div className="max-w-md text-center">
-                    <img
+                    {/* <img
                         src="/your-gif-or-image.gif"
                         alt="App preview"
                         className="w-full rounded-lg shadow-sm mb-6"
-                    />
-                    <h2 className="text-2xl font-semibold text-neutral-800 mb-2">
+                    /> */}
+                    <h2 className="text-4xl font-semibold text-[var(--color-primary)] mb-2">
                         Create stunning videos
                     </h2>
-                    <p className="text-neutral-600">
+                    <p className="text-[var(--color-text-muted)]">
                         Edit transcripts, sync with Remotion, and export in minutes.
                     </p>
                 </div>

@@ -51,8 +51,8 @@ export const StyleSelector: React.FC<{
                         key={cat}
                         onClick={() => setActiveCategory(cat)}
                         className={`px-4 py-1.5 text-[10px] font-medium uppercase tracking-wider rounded-lg transition-all whitespace-nowrap ${activeCategory === cat
-                            ? 'bg-black text-white'
-                            : 'text-gray-500 hover:text-black hover:bg-gray-100'
+                            ? 'bg-[var(--color-primary)] text-[var(--color-bg)]'
+                            : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg-hover)]'
                             }`}
                     >
                         {cat}
@@ -78,8 +78,8 @@ export const StyleSelector: React.FC<{
                                 <button
                                     onClick={() => onStyleSelect(style.id)}
                                     className={`w-full h-full relative group bg-gray-200 rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] ${selected
-                                        ? 'border-black ring-2 ring-black ring-offset-2'
-                                        : 'border-transparent hover:border-gray-300'
+                                        ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)] ring-offset-2'
+                                        : 'border-transparent hover:border-[var(--color-border)]'
                                         }`}
                                 >
                                     {/* Preview Placeholder */}
@@ -105,7 +105,7 @@ export const StyleSelector: React.FC<{
 
                                     {/* Selected Checkmark (Top Right) */}
                                     {selected && (
-                                        <div className="absolute top-3 right-3 w-6 h-6 bg-black rounded-full flex items-center justify-center text-white shadow-lg">
+                                        <div className="absolute top-3 right-3 w-6 h-6 bg-[var(--color-primary)] rounded-full flex items-center justify-center text-[var(--color-bg)] shadow-lg">
                                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                             </svg>
