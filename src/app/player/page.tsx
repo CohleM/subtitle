@@ -1,8 +1,8 @@
 'use client';
 
 import { Player } from '@remotion/player';
-import { useEffect, useState, useMemo, memo, useCallback, useRef } from 'react';
-import { Plus, Trash2, Monitor, Maximize, Wand2 } from 'lucide-react';
+import { useEffect, useState, useMemo, memo, useCallback, useRef, Suspense } from 'react';
+// import { Plus, Trash2, Monitor, Maximize, Wand2 } from 'lucide-react';
 import { SubtitleGroup } from '../../../types/subtitles';
 import { Main } from '../../remotion/Main';
 import { StyleSelector } from '../../components/StyleSelector';
@@ -79,7 +79,7 @@ const VideoPlayer = memo(function VideoPlayer({
     );
 });
 
-export default function Page() {
+function PlayerPageContent() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL
     const [accessToken] = useLocalStorage("access_token", "");
     const searchParams = useSearchParams();
@@ -87,7 +87,7 @@ export default function Page() {
 
     const [transcript, setTranscript] = useState<SubtitleGroup[]>([]);
     const [activeTab, setActiveTab] = useState<'style' | 'captions'>('captions');
-    const [isPortrait, setIsPortrait] = useState(true);
+    // const [isPortrait, setIsPortrait] = useState(true);
     const [selectedStyle, setSelectedStyle] = useState('basic');
     const [editingStyle, setEditingStyle] = useState<string | null>(null);
     const [customConfig, setCustomConfig] = useState<SubtitleStyleConfig | null>(null);
@@ -116,8 +116,9 @@ export default function Page() {
     const [originalEditingConfig, setOriginalEditingConfig] = useState<SubtitleStyleConfig | null>(null);
     const [isSavingStyle, setIsSavingStyle] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
-    const compositionWidth = isPortrait ? 1080 : 1920;
-    const compositionHeight = isPortrait ? 1920 : 1080;
+    const [compositionWidth, setCompositionWidth] = useState(1080)
+    const [compositionHeight, setCompositionHeight] = useState(1920)
+
     const [captionPadding, setCaptionPadding] = useState(0);
 
     useEffect(() => {
@@ -166,6 +167,8 @@ export default function Page() {
                 setCustomConfig(currentStyle ?? null);
                 setSelectedStyle(styleKey);
                 setLowresUrl(video.low_res_url);
+                setCompositionHeight(video.height);
+                setCompositionWidth(video.width);
                 setVideoInfo({
                     width: video.width,
                     height: video.height,
@@ -298,9 +301,9 @@ export default function Page() {
         };
     }, []);
 
-    const currentStyleConfig = useMemo(() => {
-        return customConfig || defaultStyleConfigs[selectedStyle];
-    }, [customConfig, selectedStyle]);
+    // const currentStyleConfig = useMemo(() => {
+    //     return customConfig || defaultStyleConfigs[selectedStyle];
+    // }, [customConfig, selectedStyle]);
 
     const hasUnsavedChanges = useMemo(() => {
         if (!editingStyle || !originalEditingConfig) return false;
@@ -665,5 +668,17 @@ export default function Page() {
                 isGenerating={isGenerating}
             />
         </div>
+    );
+}
+
+export default function Page() {
+    return (
+        <Suspense fallback={
+            <div className="h-screen flex items-center justify-center bg-white">
+                <p className="text-sm text-gray-500">Loading player...</p>
+            </div>
+        }>
+            <PlayerPageContent />
+        </Suspense>
     );
 }

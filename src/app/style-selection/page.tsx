@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { UploadFlow } from '../../components/UploadFlow';
 import { Navbar } from '../../components/DashboardNavbar';
@@ -7,7 +7,7 @@ import { Navbar } from '../../components/DashboardNavbar';
 import useLocalStorage from 'use-local-storage';
 import { defaultStyleConfigs } from '../../config/styleConfigs';
 
-export default function StyleSelectionPage() {
+function StyleSelectionContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isGenerating, setIsGenerating] = useState(false);
@@ -220,5 +220,17 @@ export default function StyleSelectionPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function StyleSelectionPage() {
+    return (
+        <Suspense fallback={
+            <div className="h-screen flex items-center justify-center bg-white">
+                <p className="text-sm text-gray-500">Loading...</p>
+            </div>
+        }>
+            <StyleSelectionContent />
+        </Suspense>
     );
 }

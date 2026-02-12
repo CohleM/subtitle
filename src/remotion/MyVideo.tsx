@@ -1,10 +1,10 @@
 // src/remotion/MyVideo.tsx - IMPROVED VERSION
-import { AbsoluteFill, Sequence, useVideoConfig, Html5Video, staticFile } from 'remotion';
+import { AbsoluteFill, Sequence, useVideoConfig, Html5Video } from 'remotion';
 import { SubtitleGroup } from '../../types/subtitles';
 import { StyleRenderer } from './StyleRenderer';
 import { SubtitleStyleConfig } from '../../types/style';
 import { memo, useMemo } from 'react';
-import { Video } from '@remotion/media';
+// import { Video } from '@remotion/media';
 
 type MainProps = {
     groups: SubtitleGroup[];

@@ -1,4 +1,4 @@
-import { getStyleConfig } from '../config/styleConfigs';
+// import { getStyleConfig } from '../config/styleConfigs';
 import { SubtitleStyleConfig } from '../../types/style';
 import { SubtitleGroup } from '../../types/subtitles';
 import { ThreeLines } from './Subtitles/ThreeLines';

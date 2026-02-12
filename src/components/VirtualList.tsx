@@ -32,7 +32,7 @@ export const VirtualList = memo(function VirtualList<T>({
         return () => resizeObserver.disconnect();
     }, []);
 
-    const { virtualItems, totalHeight, startIndex } = useMemo(() => {
+    const { virtualItems, totalHeight } = useMemo(() => {
         const totalHeight = items.length * itemHeight;
         const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
         const visibleCount = Math.ceil(containerHeight / itemHeight) + 2 * overscan;

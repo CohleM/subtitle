@@ -14,7 +14,7 @@ import {
 import { loadFont as loadInter } from '@remotion/google-fonts/Poppins';
 import { loadFont as loadMontserrat } from '@remotion/google-fonts/Poppins';
 import { loadFont as loadBebas } from '@remotion/google-fonts/BebasNeue';
-import { loadFont as loadPlayfair } from '@remotion/google-fonts/PlayfairDisplay'; // Added for italic
+// import { loadFont as loadPlayfair } from '@remotion/google-fonts/PlayfairDisplay'; // Added for italic
 
 type Word = {
     word: string;
@@ -44,7 +44,7 @@ const LINE_SPACING = 0;
 const inter = loadInter();
 const montserrat = loadMontserrat();
 const bebas = loadBebas();
-const playfair = loadPlayfair(); // Initialize italic font
+// const playfair = loadPlayfair(); // Initialize italic font
 
 // Font type mapping - now includes color property
 const FONT_TYPE_MAP: Record<string, { fontSize: number; fontWeight: number; fontFamily: string; fontStyle?: string; color: string }> = {

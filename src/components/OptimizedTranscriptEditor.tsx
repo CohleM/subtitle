@@ -2,8 +2,8 @@
 'use client';
 
 import { useState, useCallback, useMemo, memo, useEffect } from 'react';
-import { SubtitleGroup, Line, Word } from '../../types/subtitles';
-import { X, Edit3 } from 'lucide-react';
+import { SubtitleGroup, Line } from '../../types/subtitles';
+import { X } from 'lucide-react';
 
 // Color coding for different font types
 const FONT_TYPE_COLORS: Record<string, { border: string; bg: string; hover: string }> = {
@@ -94,7 +94,7 @@ const EditModal = ({
         onClose();
     };
 
-    const colors = FONT_TYPE_COLORS[fontType] || DEFAULT_COLOR;
+    // const colors = FONT_TYPE_COLORS[fontType] || DEFAULT_COLOR;
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">

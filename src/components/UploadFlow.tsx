@@ -1,8 +1,6 @@
-// src/components/UploadFlow.tsx
 'use client';
-
 import { useState, useCallback } from 'react';
-import { Sparkles, ArrowRight, Check, X } from 'lucide-react';
+import { Sparkles, ArrowRight, Check } from 'lucide-react';
 import { SubtitleStyle } from '../../types/style';
 
 const styles: SubtitleStyle[] = [

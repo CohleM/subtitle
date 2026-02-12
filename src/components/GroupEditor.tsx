@@ -1,6 +1,6 @@
 import { SubtitleGroup } from '../../types/subtitles';
 import { LineEditor } from './LineEditor';
-import { Plus, Trash2 } from 'lucide-react';
+// import { Plus, Trash2 } from 'lucide-react';
 
 export const GroupEditor: React.FC<{
     group: SubtitleGroup;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2, CheckCircle2, XCircle, Download, Pencil } from "lucide-react";
 import useLocalStorage from "use-local-storage";
@@ -14,7 +14,7 @@ type RenderStatusResponse = {
     videoId?: number;
 };
 
-export default function RenderViewPage() {
+function RenderViewPageContent() {
     const params = useParams();
     const router = useRouter();
     const jobId = params.jobId as string;
@@ -158,7 +158,7 @@ export default function RenderViewPage() {
                             <video
                                 src={data.videoUrl}
                                 controls
-                                autoPlay
+                                // autoPlay
                                 className="w-full max-h-[60vh] object-contain"
                             />
                         </div>
@@ -198,5 +198,18 @@ export default function RenderViewPage() {
 
             </div>
         </div>
+    );
+}
+
+
+export default function RenderViewPage() {
+    return (
+        <Suspense fallback={
+            <div className="h-screen flex items-center justify-center bg-white">
+                <p className="text-sm text-gray-500">Loading...</p>
+            </div>
+        }>
+            <RenderViewPageContent />
+        </Suspense>
     );
 }

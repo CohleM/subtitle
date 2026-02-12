@@ -1,8 +1,8 @@
 // src/components/StyleChangeDialog.tsx
 'use client';
 
-import { useState } from 'react';
-import { Sparkles, Clock, AlertCircle } from 'lucide-react';
+// import { useState } from 'react';
+import { Sparkles, Clock } from 'lucide-react';
 
 interface StyleChangeDialogProps {
     isOpen: boolean;

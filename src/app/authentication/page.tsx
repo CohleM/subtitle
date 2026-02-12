@@ -10,7 +10,7 @@ export default function Login() {
     const { push } = useRouter();
     const [isError, setIsError] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
-    const [localStorage, setLocalStorage] = useLocalStorage("access_token", "");
+    const [_, setLocalStorage] = useLocalStorage("access_token", "");
 
     const handleGoogleLoginSuccess = async (response: any) => {
         const token = response.credential;
