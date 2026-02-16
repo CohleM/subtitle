@@ -411,7 +411,7 @@ type ThreeLinesProps = {
     captionPadding?: number;
 };
 
-export const NormalAndItalic: React.FC<ThreeLinesProps> = ({
+export const NormalAndBold: React.FC<ThreeLinesProps> = ({
     group,
     config,
     captionPadding = 540

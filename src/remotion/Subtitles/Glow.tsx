@@ -12,7 +12,7 @@ import {
 } from 'remotion';
 import { memo } from 'react';
 import { SubtitleGroup, Line } from '../../../types/subtitles';
-import { SubtitleStyleConfig, FontStyleDefinition } from '../../../types/style';
+import { SubtitleStyleConfig, FontStyleDefinition, AnimationType } from '../../../types/style';
 
 // Pre-load common fonts to avoid delayRender issues
 import { loadFont as loadInter } from '@remotion/google-fonts/Inter';
@@ -20,6 +20,7 @@ import { loadFont as loadBebas } from '@remotion/google-fonts/BebasNeue';
 import { loadFont as loadPoppins } from '@remotion/google-fonts/Poppins';
 import { loadFont as loadMontserrat } from '@remotion/google-fonts/Montserrat';
 import { loadFont as loadOswald } from '@remotion/google-fonts/Oswald';
+import { loadFont as loadCormorantGaramond } from '@remotion/google-fonts/CormorantGaramond';
 
 // Initialize fonts
 loadInter();
@@ -27,8 +28,15 @@ loadBebas();
 loadPoppins();
 loadMontserrat();
 loadOswald();
+loadCormorantGaramond();
 
+// ============================================
+// CONFIGURABLE ANIMATION VARIABLES
+// ============================================
 const LINE_SPACING = 0;
+const FADE_OUT_DURATION_FRAMES = 30; // How long the fade out animation takes
+const MAX_WORD_DISPLAY_SECONDS = 3; // Maximum time a word stays on screen
+// ============================================
 
 // Get font styles from config safely
 const getFontStyle = (config: SubtitleStyleConfig, fontType: string): FontStyleDefinition => {
@@ -40,6 +48,12 @@ const getFontStyle = (config: SubtitleStyleConfig, fontType: string): FontStyleD
     };
 
     return config.fonts[fontType as keyof typeof config.fonts] || defaultStyle;
+};
+
+// Get animation type for a specific font type from config
+const getAnimationType = (config: SubtitleStyleConfig, fontType: string): AnimationType => {
+    const style = config.fonts[fontType as keyof typeof config.fonts];
+    return style?.animationType || 'fade-blur';
 };
 
 // Hook to wait for Google Fonts to load based on config
@@ -134,14 +148,22 @@ const calculateLinePositions = (
     return offsets;
 };
 
-// Build text shadow based on shadow settings
+// Helper function to convert hex to rgb
+const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+};
+
 // Build text shadow based on shadow settings
 const buildTextShadow = (style: FontStyleDefinition): string => {
     const shadows: string[] = [];
 
     // 1. Default subtle drop shadow for readability (optional, keep small)
-    shadows.push('2px 2px 4px rgba(0,0,0,0.3)');
-    // shadows.push('');
+    shadows.push('2px 2px 4px rgba(0,0,0,0.4)');
 
     // 2. The GLOW effect - multiple layers for soft falloff
     if (style.shadow && style.shadow !== 'none') {
@@ -150,22 +172,12 @@ const buildTextShadow = (style: FontStyleDefinition): string => {
         // Parse color to rgba for opacity control
         const rgb = hexToRgb(baseColor) || { r: 255, g: 255, b: 255 };
 
-        // Create 4-5 layers of glow with increasing blur and decreasing opacity
-        // This creates the soft, atmospheric neon effect
-        // const glowLayers = [
-        //     { blur: 10, opacity: 1 },   // Inner tight glow
-        //     { blur: 20, opacity: 0.5 },   // Mid spread
-        //     { blur: 70, opacity: 0.3 },   // Outer diffuse
-        //     // { blur: 60, opacity: 0.15 },  // Atmospheric falloff
-        // ];
-
-
         const glowLayers = [
             { blur: 10, opacity: 0.8 },   // Inner tight glow
-            { blur: 0, opacity: 0.5 },   // Mid spread
-            // { blur: 100, opacity: 0.5 },   // Outer diffuse
-            { blur: 100, opacity: 1 },  // Atmospheric falloff
+            { blur: 0, opacity: 0.5 },    // Mid spread
+            { blur: 100, opacity: 1 },    // Atmospheric falloff
         ];
+
         // Adjust intensity based on shadow size setting
         const intensityMultiplier =
             style.shadow === 'small' ? 0.6 :
@@ -178,7 +190,7 @@ const buildTextShadow = (style: FontStyleDefinition): string => {
         });
     }
 
-    // 3. Stroke/outline effect (keep your existing logic)
+    // 3. Stroke/outline effect
     if (style.strokeWeight && style.strokeWeight !== 'none') {
         const width = style.strokeWeight === 'small' ? 1 : style.strokeWeight === 'medium' ? 2 : 3;
         const color = style.strokeColor || '#000000';
@@ -194,14 +206,73 @@ const buildTextShadow = (style: FontStyleDefinition): string => {
     return shadows.join(', ');
 };
 
-// Helper function to convert hex to rgb
-const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : null;
+// Hook to calculate animation values based on type
+const useWordAnimation = (
+    animationType: AnimationType,
+    frame: number,
+    fps: number,
+    wordStartFrame: number
+) => {
+    const animationFrame = Math.max(0, frame - wordStartFrame);
+
+    const springValue = useMemo(() => spring({
+        frame: animationFrame,
+        fps,
+        config: { damping: 100, stiffness: 100 },
+    }), [animationFrame, fps]);
+
+    return useMemo(() => {
+        switch (animationType) {
+            case 'slide-up':
+                return {
+                    transform: `translateY(${interpolate(springValue, [0, 1], [50, 0])}px)`,
+                    opacity: interpolate(springValue, [0, 1], [0, 1]),
+                    filter: `blur(${interpolate(springValue, [0, 1], [4, 0])}px)`,
+                };
+
+            case 'slide-down':
+                return {
+                    transform: `translateY(${interpolate(springValue, [0, 1], [-50, 0])}px)`,
+                    opacity: interpolate(springValue, [0, 1], [0, 1]),
+                    filter: `blur(${interpolate(springValue, [0, 1], [4, 0])}px)`,
+                };
+
+            case 'slide-left':
+                return {
+                    transform: `translateX(${interpolate(springValue, [0, 1], [100, 0])}px)`,
+                    opacity: interpolate(springValue, [0, 1], [0, 1]),
+                    filter: `blur(${interpolate(springValue, [0, 1], [4, 0])}px)`,
+                };
+
+            case 'slide-right':
+                return {
+                    transform: `translateX(${interpolate(springValue, [0, 1], [-100, 0])}px)`,
+                    opacity: interpolate(springValue, [0, 1], [0, 1]),
+                    filter: `blur(${interpolate(springValue, [0, 1], [4, 0])}px)`,
+                };
+
+            case 'scale':
+                return {
+                    transform: `scale(${interpolate(springValue, [0, 1], [0.5, 1])})`,
+                    opacity: interpolate(springValue, [0, 1], [0, 1]),
+                    filter: `blur(${interpolate(springValue, [0, 1], [4, 0])}px)`,
+                };
+
+            case 'fade-blur':
+                return {
+                    transform: 'none',
+                    opacity: interpolate(springValue, [0, 1], [0, 1]),
+                    filter: `blur(${interpolate(springValue, [0, 1], [10, 0])}px)`,
+                };
+
+            default:
+                return {
+                    transform: `translateY(${interpolate(springValue, [0, 1], [50, 0])}px)`,
+                    opacity: interpolate(springValue, [0, 1], [0, 1]),
+                    filter: `blur(${interpolate(springValue, [0, 1], [4, 0])}px)`,
+                };
+        }
+    }, [animationType, springValue]);
 };
 
 const WordText = memo(function WordText({
@@ -209,41 +280,82 @@ const WordText = memo(function WordText({
     wordIndex,
     lineStart,
     wordStart,
+    wordEnd,
+    lineEnd,
+    animationType,
 }: {
     word: string;
     wordIndex: number;
     lineStart: number;
     wordStart: number;
+    wordEnd: number;
+    lineEnd: number;
+    animationType: AnimationType;
 }) {
     const frame = useCurrentFrame();
     const { fps } = useVideoConfig();
 
     const relativeWordStart = wordStart - lineStart;
     const wordStartFrame = Math.round(relativeWordStart * fps);
-    const animationFrame = Math.max(0, frame - wordStartFrame);
 
-    // ✅ Use useMemo for expensive calculations
-    const springValue = useMemo(() => spring({
-        frame: animationFrame,
-        fps,
-        config: { damping: 100, stiffness: 100 },
-    }), [animationFrame, fps]);
+    // Calculate when this word should start fading out (2 seconds after appearance)
+    const maxDisplayFrames = MAX_WORD_DISPLAY_SECONDS * fps;
+    const fadeOutStartFrame = wordStartFrame + maxDisplayFrames;
 
-    const translateY = useMemo(() =>
-        interpolate(springValue, [0, 1], [50, 0]),
-        [springValue]);
+    // Determine fade out end based on either 2-second limit or line end, whichever comes first
+    const relativeWordEnd = wordEnd - lineStart;
+    const wordEndFrame = Math.round(relativeWordEnd * fps);
+    const fadeOutEndFrame = Math.min(fadeOutStartFrame + FADE_OUT_DURATION_FRAMES, wordEndFrame);
 
-    const opacity = useMemo(() =>
-        interpolate(springValue, [0, 1], [0, 1]),
-        [springValue]);
+    // Get entry animation values
+    const entryAnimation = useWordAnimation(animationType, frame, fps, wordStartFrame);
+
+    const { opacity, transform, filter } = useMemo(() => {
+        // Entry animation values
+        const entryOpacity = entryAnimation.opacity;
+        const entryTransform = entryAnimation.transform;
+        const entryFilter = entryAnimation.filter;
+
+        // Check if we should start fading out (2 seconds after appearance)
+        if (frame < fadeOutStartFrame) {
+            return {
+                opacity: entryOpacity,
+                transform: entryTransform,
+                filter: entryFilter
+            };
+        }
+
+        // If we're past the word's end time, it's fully invisible
+        if (frame >= fadeOutEndFrame) {
+            return {
+                opacity: 0,
+                transform: entryTransform,
+                filter: 'blur(10px)'
+            };
+        }
+
+        // Calculate fade out progress
+        const fadeOutProgress = (frame - fadeOutStartFrame) / (fadeOutEndFrame - fadeOutStartFrame);
+        const fadeOutOpacity = interpolate(fadeOutProgress, [0, 1], [entryOpacity, 0]);
+        const fadeOutBlur = interpolate(fadeOutProgress, [0, 1], [0, 10]);
+
+        // Combine entry transform with fade out
+        return {
+            opacity: fadeOutOpacity,
+            transform: entryTransform,
+            filter: `blur(${fadeOutBlur}px)`
+        };
+    }, [entryAnimation, frame, fadeOutStartFrame, fadeOutEndFrame]);
 
     return (
         <span style={{
             display: 'inline-block',
-            transform: `translateY(${translateY}px)`,
+            transform,
             opacity,
+            filter,
             marginRight: '0.3em',
             whiteSpace: 'pre',
+            willChange: 'transform, opacity, filter',
         }}>
             {word}
         </span>
@@ -257,12 +369,16 @@ const LineText = memo(function LineText({
     translateYOffset,
     style,
     captionPadding,
+    lineEnd,
+    animationType,
 }: {
     line: Line;
     lineIndex: number;
     translateYOffset: number;
     style: FontStyleDefinition;
     captionPadding: number;
+    lineEnd: number;
+    animationType: AnimationType;
 }) {
     // ✅ Memoize expensive style calculations
     const textShadow = useMemo(() => buildTextShadow(style), [style]);
@@ -307,6 +423,9 @@ const LineText = memo(function LineText({
                         wordIndex={wordIndex}
                         lineStart={line.start}
                         wordStart={word.start}
+                        wordEnd={word.end}
+                        lineEnd={lineEnd}
+                        animationType={animationType}
                     />
                 ))}
             </div>
@@ -327,9 +446,6 @@ export const Glow: React.FC<ThreeLinesProps> = ({
 }) => {
     const { fps, width } = useVideoConfig();
     const fontsLoaded = useFontsLoaded(config);
-
-
-    // console.log('this is CustomStyleConfigs', config.fonts.bold)
 
     if (!group?.lines?.length) {
         console.error('Invalid group data:', group);
@@ -354,6 +470,13 @@ export const Glow: React.FC<ThreeLinesProps> = ({
                 const from = Math.round(relativeStart * fps);
                 const fontStyle = getFontStyle(config, line.font_type);
 
+                // Get animation type based on the line's font_type
+                const animationType = getAnimationType(config, line.font_type);
+
+                // Calculate line end time for word fade out limits
+                const nextLine = group.lines[lineIndex + 1];
+                const lineEndTime = nextLine ? nextLine.start : (group.start + (line.words[line.words.length - 1]?.end || line.end));
+
                 return (
                     <Sequence
                         key={`line-${lineIndex}`}
@@ -365,6 +488,8 @@ export const Glow: React.FC<ThreeLinesProps> = ({
                             translateYOffset={lineOffsets[lineIndex]}
                             style={fontStyle}
                             captionPadding={captionPadding}
+                            lineEnd={lineEndTime}
+                            animationType={animationType}
                         />
                     </Sequence>
                 );

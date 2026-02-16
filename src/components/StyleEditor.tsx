@@ -9,7 +9,8 @@ import {
     Save,
     AlertCircle,
     Move,
-    Maximize
+    Maximize,
+    Info
 } from 'lucide-react';
 import { SubtitleStyleConfig, FontStyleDefinition, AnimationType } from '../../types/style';
 
@@ -56,6 +57,10 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
     const [selectedFontType, setSelectedFontType] = useState<FontType>('normal');
     const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
 
+    // Check if this is the Combo style
+    const isComboStyle = config.id === 'Combo';
+
+    console.log('lets check config', config)
     const handleUpdateFontStyle = useCallback((fontType: FontType, updates: Partial<FontStyleDefinition>) => {
         const newConfig: SubtitleStyleConfig = {
             ...config,
@@ -262,6 +267,13 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                                     Font Settings
                                 </h3>
 
+                                {isComboStyle && (
+                                    <div className="mb-4 flex items-start gap-2 text-xs text-amber-600 bg-amber-50/50 border border-amber-200 px-3 py-2 rounded-lg">
+                                        <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                                        <span>Font sizes are set dynamically based on content. Changes here may not have the exact effect intended.</span>
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-xs font-medium text-[var(--color-text)]">Font Family</label>
@@ -286,8 +298,9 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                                                 value={currentFontStyle.fontSize}
                                                 onChange={(e) => handleUpdateFontStyle(selectedFontType, { fontSize: Number(e.target.value) })}
                                                 className="flex-1 h-1.5 bg-[var(--color-bg-secondary)] rounded-full appearance-none cursor-pointer accent-[var(--color-primary)]"
+                                                disabled={isComboStyle}
                                             />
-                                            <span className="text-xs font-mono text-[var(--color-text-muted)] w-12 text-right">
+                                            <span className={`text-xs font-mono w-12 text-right ${isComboStyle ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)]'}`}>
                                                 {currentFontStyle.fontSize}px
                                             </span>
                                         </div>
@@ -322,15 +335,6 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                                         />
                                         Uppercase
                                     </label>
-                                    {/* <label className="flex items-center gap-2 text-xs font-medium text-[var(--color-text)] cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={currentFontStyle.italic || false}
-                                            onChange={(e) => handleUpdateFontStyle(selectedFontType, { italic: e.target.checked, fontStyle: e.target.checked ? 'italic' : 'normal' })}
-                                            className="w-4 h-4 rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]/20"
-                                        />
-                                        Italic Style
-                                    </label> */}
                                 </div>
                             </div>
                         </div>
@@ -363,24 +367,6 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                                             />
                                         </div>
                                     </div>
-                                    {/* 
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-medium text-[var(--color-text)]">Background Color</label>
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="color"
-                                                value={currentFontStyle.backgroundColor || 'transparent'}
-                                                onChange={(e) => handleUpdateFontStyle(selectedFontType, { backgroundColor: e.target.value })}
-                                                className="w-10 h-10 rounded-xl border border-[var(--color-border)] cursor-pointer bg-transparent"
-                                            />
-                                            <input
-                                                type="text"
-                                                value={currentFontStyle.backgroundColor || 'transparent'}
-                                                onChange={(e) => handleUpdateFontStyle(selectedFontType, { backgroundColor: e.target.value })}
-                                                className="flex-1 px-3 py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-sm font-mono uppercase text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
-                                            />
-                                        </div>
-                                    </div> */}
                                 </div>
                             </div>
                         </div>
@@ -477,6 +463,13 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                                     Animation Settings
                                 </h3>
 
+                                {isComboStyle && (
+                                    <div className="mb-4 flex items-start gap-2 text-xs text-amber-600 bg-amber-50/50 border border-amber-200 px-3 py-2 rounded-lg">
+                                        <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                                        <span>Animations are auto-generated and cannot be edited for this style</span>
+                                    </div>
+                                )}
+
                                 <div className="space-y-4">
                                     <div className="space-y-3">
                                         <label className="text-xs font-medium text-[var(--color-text)]">Animation Type</label>
@@ -484,19 +477,25 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                                             {ALL_ANIMATION_TYPES.map(({ value, label, description }) => (
                                                 <button
                                                     key={value}
-                                                    onClick={() => handleAnimationTypeChange(value)}
+                                                    onClick={() => !isComboStyle && handleAnimationTypeChange(value)}
+                                                    disabled={isComboStyle}
                                                     className={`
-                                                        relative p-4 rounded-xl border-2 text-left transition-all active:scale-[0.98]
-                                                        ${currentFontStyle.animationType === value
-                                                            ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-text)]'
-                                                            : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] hover:border-[var(--color-text-muted)]'
+                                                        relative p-4 rounded-xl border-2 text-left transition-all
+                                                        ${isComboStyle
+                                                            ? 'opacity-50 cursor-not-allowed border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
+                                                            : 'active:scale-[0.98] ' + (currentFontStyle.animationType === value
+                                                                ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-text)]'
+                                                                : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] hover:border-[var(--color-text-muted)]'
+                                                            )
                                                         }
                                                     `}
                                                 >
                                                     <div className="flex items-start gap-3">
                                                         <div className={`
                                                             p-2 rounded-lg
-                                                            ${currentFontStyle.animationType === value ? 'bg-[var(--color-primary)]/20' : 'bg-[var(--color-bg-secondary)]'}
+                                                            ${isComboStyle ? 'bg-[var(--color-bg)]' :
+                                                                currentFontStyle.animationType === value ? 'bg-[var(--color-primary)]/20' : 'bg-[var(--color-bg-secondary)]'
+                                                            }
                                                         `}>
                                                             {value.includes('slide') && <Move className="w-4 h-4" />}
                                                             {value === 'scale' && <Maximize className="w-4 h-4" />}
@@ -506,34 +505,22 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                                                             <div className="text-sm font-medium">{label}</div>
                                                             <div className={`
                                                                 text-xs mt-0.5
-                                                                ${currentFontStyle.animationType === value ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-light)]'}
+                                                                ${isComboStyle ? 'text-[var(--color-text-muted)]' :
+                                                                    currentFontStyle.animationType === value ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-light)]'
+                                                                }
                                                             `}>
                                                                 {description}
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    {currentFontStyle.animationType === value && (
+                                                    {!isComboStyle && currentFontStyle.animationType === value && (
                                                         <div className="absolute top-2 right-2 w-2 h-2 bg-[var(--color-primary)] rounded-full" />
                                                     )}
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
-
-                                    {/* Preview Section - Commented out for now */}
-                                    {/* <div className="mt-6 p-4 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)]">
-                                        <div className="text-xs font-medium text-[var(--color-text-muted)] mb-3 uppercase tracking-wider">Preview</div>
-                                        <div className="h-24 flex items-center justify-center bg-[var(--color-bg-secondary)] rounded-lg overflow-hidden relative">
-                                            <div className="text-2xl font-bold text-[var(--color-text)] animate-pulse">
-                                                {currentFontStyle.animationType ? (
-                                                    <span className="capitalize">{currentFontStyle.animationType.replace('-', ' ')}</span>
-                                                ) : (
-                                                    'No animation'
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div> */}
                                 </div>
                             </div>
                         </div>

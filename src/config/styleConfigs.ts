@@ -416,41 +416,8 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
         category: 'All',
         fonts: {
             bold: {
-                fontSize: 120,
-                fontWeight: 800,
-                fontFamily: 'Bebas Neue',
-                color: '#ffffff'
-            },
-            thin: {
-                fontSize: 50,
-                fontWeight: 100,
-                fontFamily: 'Inter',
-                color: '#ffffff'
-            },
-            normal: {
-                fontSize: 60,
-                fontWeight: 400,
-                fontFamily: 'Poppins',
-                color: '#ffffff'
-            },
-            italic: {
-                fontSize: 60,
-                fontWeight: 200,
-                fontFamily: 'Inter',
-                fontStyle: 'italic',
-                color: '#ffffff'
-            }
-        }
-    },
-
-    Combo1: {
-        id: 'Combo1',
-        name: 'Combo1',
-        category: 'All',
-        fonts: {
-            bold: {
-                fontSize: 120,
-                fontWeight: 800,
+                fontSize: 100,
+                fontWeight: 900,
                 fontFamily: 'Poppins',
                 color: '#ffffff',
                 shadow: "large",
@@ -504,7 +471,7 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
                 color: '#ffffff',
                 shadow: "large",
                 shadowColor: '#ffffff',
-                animationType: 'fade-blur'
+                animationType: 'slide-up'
             },
             normal: {
                 fontSize: 60,
@@ -513,7 +480,7 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
                 color: '#ffffff',
                 shadow: "large",
                 shadowColor: '#ffffff',
-                animationType: 'slide-down'
+                animationType: 'slide-up'
 
             },
             italic: {
@@ -525,6 +492,141 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
                 shadow: "large",
                 shadowColor: '#ffffff',
                 animationType: 'fade-blur'
+            }
+        }
+    },
+    NaB: {
+        id: 'NaB',
+        name: 'Normal and Bold',
+        category: 'All',
+        fonts: {
+            bold: {
+                fontSize: 80,
+                fontWeight: 900,
+                fontFamily: 'Poppins',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'fade-blur'
+            },
+            thin: {
+                fontSize: 50,
+                fontWeight: 100,
+                fontFamily: 'Inter',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'fade-blur'
+            },
+            normal: {
+                fontSize: 60,
+                fontWeight: 400,
+                fontFamily: 'Poppins',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'slide-up'
+
+            },
+            italic: {
+                fontSize: 100,
+                fontWeight: 700,
+                fontFamily: 'Cormorant Garamond',
+                fontStyle: 'italic',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'fade-blur'
+            }
+        }
+    },
+    Glow: {
+        id: 'Glow',
+        name: 'Glow',
+        category: 'All',
+        fonts: {
+            bold: {
+                fontSize: 80,
+                fontWeight: 800,
+                fontFamily: 'Inter',
+                color: '#f9fc19',
+                uppercase: false,
+                shadow: "large",
+                shadowColor: '#f9fc19',
+                animationType: 'slide-up'
+            },
+            thin: {
+                fontSize: 50,
+                fontWeight: 100,
+                fontFamily: 'Inter',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'slide-up'
+            },
+            normal: {
+                fontSize: 60,
+                fontWeight: 400,
+                fontFamily: 'Inter',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'slide-up'
+            },
+            italic: {
+                fontSize: 60,
+                fontWeight: 200,
+                fontFamily: 'Inter',
+                fontStyle: 'italic',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'slide-up'
+            }
+        }
+    },
+    GlowI: {
+        id: 'GlowI',
+        name: 'Glow Italic',
+        category: 'All',
+        fonts: {
+            bold: {
+                fontSize: 80,
+                fontWeight: 800,
+                fontFamily: 'Inter',
+                color: '#f9fc19',
+                uppercase: false,
+                shadow: "large",
+                shadowColor: '#f9fc19',
+                animationType: 'slide-up'
+            },
+            thin: {
+                fontSize: 50,
+                fontWeight: 100,
+                fontFamily: 'Inter',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'slide-up'
+            },
+            normal: {
+                fontSize: 60,
+                fontWeight: 400,
+                fontFamily: 'Inter',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'slide-up'
+            },
+            italic: {
+                fontSize: 100,
+                fontWeight: 700,
+                fontFamily: 'Cormorant Garamond',
+                fontStyle: 'italic',
+                color: '#f9fc19',
+                shadow: "large",
+                shadowColor: '#f9fc19',
+                animationType: 'slide-up'
             }
         }
     },
@@ -567,11 +669,12 @@ export const styles: SubtitleStyle[] = [
     { id: 'carlos', name: 'Carlos', category: 'All' },
     { id: 'luke', name: 'Luke', category: 'Speakers' },
     { id: 'mark', name: 'Mark', category: 'Premium', isPremium: true },
+    { id: 'Glow', name: 'Glow', category: 'Premium', isPremium: true },
+    { id: 'GlowI', name: 'Glow Italic', category: 'Premium', isPremium: true },
     { id: 'FaB', name: 'Fade And Blur', category: 'Premium', isPremium: true },
-    { id: 'FaB1', name: 'Fade And Blur1', category: 'Premium', isPremium: true },
     { id: 'Combo', name: 'Combo', category: 'All' },
-    { id: 'Combo1', name: 'Combo1', category: 'Trend', isPremium: true },
     { id: 'NaI', name: 'Normal and Italic', category: 'Trend', isPremium: true },
+    { id: 'NaB', name: 'Normal and Bold', category: 'Trend', isPremium: true },
     { id: 'basic', name: 'Basic ThreeLines', category: 'All' },
 ];
 
