@@ -483,6 +483,51 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
             }
         }
     },
+    NaI: {
+        id: 'NaI',
+        name: 'Normal and Italic',
+        category: 'All',
+        fonts: {
+            bold: {
+                fontSize: 100,
+                fontWeight: 800,
+                fontFamily: 'Poppins',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'fade-blur'
+            },
+            thin: {
+                fontSize: 50,
+                fontWeight: 100,
+                fontFamily: 'Inter',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'fade-blur'
+            },
+            normal: {
+                fontSize: 60,
+                fontWeight: 400,
+                fontFamily: 'Poppins',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'slide-down'
+
+            },
+            italic: {
+                fontSize: 100,
+                fontWeight: 700,
+                fontFamily: 'Cormorant Garamond',
+                fontStyle: 'italic',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'fade-blur'
+            }
+        }
+    },
 
     // Add other styles (jess, jack, etc.) here...
 };
@@ -526,6 +571,7 @@ export const styles: SubtitleStyle[] = [
     { id: 'FaB1', name: 'Fade And Blur1', category: 'Premium', isPremium: true },
     { id: 'Combo', name: 'Combo', category: 'All' },
     { id: 'Combo1', name: 'Combo1', category: 'Trend', isPremium: true },
+    { id: 'NaI', name: 'Normal and Italic', category: 'Trend', isPremium: true },
     { id: 'basic', name: 'Basic ThreeLines', category: 'All' },
 ];
 

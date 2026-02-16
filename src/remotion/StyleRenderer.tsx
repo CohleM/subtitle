@@ -7,6 +7,7 @@ import { Glow } from './Subtitles/Glow';
 import { WithItalic } from './Subtitles/WithItalic';
 import { FadeAndBlur } from './Subtitles/FadeAndBlur';
 import { CombinedAnimation } from './Subtitles/CombinedAnimation';
+import { NormalAndItalic } from './Subtitles/NormalAndItalic';
 
 type StyleRendererProps = {
     group: SubtitleGroup;
@@ -28,13 +29,20 @@ export const StyleRenderer: React.FC<StyleRendererProps> = ({
         case 'jess':
         case 'jack':
         case 'basic':
+        case 'NaI': //normal and italic
+            return <NormalAndItalic
+                group={group}
+                config={config}
+                captionPadding={captionPadding}
+            />;
+
         default:
             // return <EqualWidth
             //     group={group}
             //     config={config}
             //     captionPadding={captionPadding}
             // />;
-            return <CombinedAnimation
+            return <EqualWidth
                 group={group}
                 config={config}
                 captionPadding={captionPadding}
