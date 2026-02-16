@@ -340,6 +340,76 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
             }
         }
     },
+    FaB: {
+        id: 'FaB',
+        name: 'Fade And Blur',
+        category: 'All',
+        fonts: {
+            bold: {
+                fontSize: 80,
+                fontWeight: 800,
+                fontFamily: 'Inter',
+                color: '#f6ff4d',
+                uppercase: true
+            },
+            thin: {
+                fontSize: 50,
+                fontWeight: 100,
+                fontFamily: 'Inter',
+                color: '#ffffff'
+            },
+            normal: {
+                fontSize: 60,
+                fontWeight: 400,
+                fontFamily: 'Inter',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+            },
+            italic: {
+                fontSize: 60,
+                fontWeight: 200,
+                fontFamily: 'Inter',
+                fontStyle: 'italic',
+                color: '#ffffff'
+            }
+        }
+    },
+    FaB1: {
+        id: 'FaB1',
+        name: 'Fade And Blur1',
+        category: 'All',
+        fonts: {
+            bold: {
+                fontSize: 80,
+                fontWeight: 800,
+                fontFamily: 'Inter',
+                color: '#f6ff4d',
+                uppercase: true
+            },
+            thin: {
+                fontSize: 50,
+                fontWeight: 100,
+                fontFamily: 'Inter',
+                color: '#ffffff'
+            },
+            normal: {
+                fontSize: 60,
+                fontWeight: 600,
+                fontFamily: 'Inter',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+            },
+            italic: {
+                fontSize: 60,
+                fontWeight: 200,
+                fontFamily: 'Inter',
+                fontStyle: 'italic',
+                color: '#ffffff'
+            }
+        }
+    },
 
     // Add other styles (jess, jack, etc.) here...
 };
@@ -379,8 +449,8 @@ export const styles: SubtitleStyle[] = [
     { id: 'carlos', name: 'Carlos', category: 'All' },
     { id: 'luke', name: 'Luke', category: 'Speakers' },
     { id: 'mark', name: 'Mark', category: 'Premium', isPremium: true },
-    { id: 'sara', name: 'Sara', category: 'Premium', isPremium: true },
-    { id: 'daniel', name: 'Daniel', category: 'Premium', isPremium: true },
+    { id: 'FaB', name: 'Fade And Blur', category: 'Premium', isPremium: true },
+    { id: 'FaB1', name: 'Fade And Blur1', category: 'Premium', isPremium: true },
     { id: 'dan2', name: 'Dan 2', category: 'All' },
     { id: 'hormozi4', name: 'Hormozi 4', category: 'Trend', isPremium: true },
     { id: 'basic', name: 'Basic ThreeLines', category: 'All' },
