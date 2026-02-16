@@ -29,7 +29,7 @@ loadMontserrat();
 loadOswald();
 
 const LINE_SPACING = 0;
-const MAX_FONT_SIZE = 200; // Maximum allowed font size after scaling
+const MAX_FONT_SIZE = 200; // Maximum allowed font size in pixels
 
 // Animation types
 export type AnimationType =
@@ -49,24 +49,56 @@ const ALL_ANIMATION_TYPES: AnimationType[] = [
     'fade-blur',
 ];
 
-// Shuffle array using Fisher-Yates algorithm
-const shuffleArray = <T,>(array: T[]): T[] => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-};
+// Seeded random number generator for deterministic animations
+class SeededRandom {
+    private seed: number;
 
-// Get distinct random animations for each line
-const getDistinctAnimationsForLines = (lineCount: number): AnimationType[] => {
+    constructor(seed: string | number) {
+        // Convert string seed to number using simple hash
+        if (typeof seed === 'string') {
+            let hash = 0;
+            for (let i = 0; i < seed.length; i++) {
+                const char = seed.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            this.seed = Math.abs(hash);
+        } else {
+            this.seed = seed;
+        }
+    }
+
+    // Returns random number between 0 and 1 (deterministic based on seed)
+    next(): number {
+        // Linear Congruential Generator
+        this.seed = (this.seed * 9301 + 49297) % 233280;
+        return this.seed / 233280;
+    }
+
+    // Fisher-Yates shuffle with seeded random
+    shuffle<T>(array: T[]): T[] {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(this.next() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+}
+
+// Get distinct random animations for each line using seeded random
+const getDistinctAnimationsForLines = (
+    lineCount: number,
+    seed: string | number
+): AnimationType[] => {
+    const rng = new SeededRandom(seed);
+
     if (lineCount <= ALL_ANIMATION_TYPES.length) {
-        return shuffleArray(ALL_ANIMATION_TYPES).slice(0, lineCount);
+        return rng.shuffle(ALL_ANIMATION_TYPES).slice(0, lineCount);
     } else {
         const animations: AnimationType[] = [];
         while (animations.length < lineCount) {
-            const shuffled = shuffleArray(ALL_ANIMATION_TYPES);
+            const shuffled = rng.shuffle(ALL_ANIMATION_TYPES);
             animations.push(...shuffled);
         }
         return animations.slice(0, lineCount);
@@ -140,8 +172,7 @@ const measureTextWidth = (
     return width;
 };
 
-// Calculate font size scale factors for each line to match widest line
-// Now with a maximum font size cap to prevent extremely large text
+// Calculate font size scale factors for each line to match widest line, with max cap
 const calculateFontScales = (
     lines: Line[],
     config: SubtitleStyleConfig
@@ -162,18 +193,17 @@ const calculateFontScales = (
     const scales = lineWidths.map((lw) => {
         if (lw.width === 0) return 1;
 
-        // Calculate the desired scale to match max width
-        const desiredScale = maxWidth / lw.width;
+        // Calculate what the scaled font size would be
+        const rawScale = maxWidth / lw.width;
+        const scaledFontSize = lw.fontSize * rawScale;
 
-        // Calculate what the final font size would be with this scale
-        const finalFontSize = lw.fontSize * desiredScale;
-
-        // If the final font size exceeds the maximum, cap the scale
-        if (finalFontSize > MAX_FONT_SIZE) {
+        // If scaled font size exceeds MAX_FONT_SIZE, cap it
+        if (scaledFontSize > MAX_FONT_SIZE) {
             return MAX_FONT_SIZE / lw.fontSize;
         }
 
-        return desiredScale;
+        // Otherwise use the original scale to match widths
+        return rawScale;
     });
 
     return scales;
@@ -460,16 +490,23 @@ export const CombinedAnimation: React.FC<ThreeLinesProps> = ({
 
     const containerWidth = width * 0.9;
 
-    // Calculate font scales to equalize line widths
+    // Calculate font scales to equalize line widths (with max cap)
     const fontScales = useMemo(() => {
         if (!fontsLoaded) return [];
         return calculateFontScales(group.lines, config);
     }, [group.lines, config, fontsLoaded]);
 
-    // Generate distinct random animations for each line
+    // Create a deterministic seed based on group start time
+    // This ensures the same group always gets the same animations
+    const animationSeed = useMemo(() => {
+        // Use group start time as seed - converts to string with fixed precision
+        return group.start.toFixed(3);
+    }, [group.start]);
+
+    // Generate distinct random animations for each line using seeded random
     const lineAnimations = useMemo(() => {
-        return getDistinctAnimationsForLines(group.lines.length);
-    }, [group.lines.length, group.start]);
+        return getDistinctAnimationsForLines(group.lines.length, animationSeed);
+    }, [group.lines.length, animationSeed]);
 
     const lineOffsets = useMemo(() => {
         if (!fontsLoaded || fontScales.length === 0) return [];
