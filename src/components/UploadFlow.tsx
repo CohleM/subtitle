@@ -1,30 +1,32 @@
 'use client';
 import { useState, useCallback } from 'react';
 import { Sparkles, ArrowRight, Check } from 'lucide-react';
-import { SubtitleStyle } from '../../types/style';
+// import { SubtitleStyle } from '../../types/style';
+import { styles, categories } from "../config/styleConfigs"
 
-const styles: SubtitleStyle[] = [
-    { id: 'matt', name: 'Matt', category: 'New', isNew: true },
-    { id: 'jess', name: 'Jess', category: 'Trend', isNew: true },
-    { id: 'jack', name: 'Jack', category: 'New', isNew: true },
-    { id: 'nick', name: 'Nick', category: 'New', isNew: true },
-    { id: 'laura', name: 'Laura', category: 'Trend' },
-    { id: 'kelly2', name: 'Kelly 2', category: 'Premium', isPremium: true },
-    { id: 'caleb', name: 'Caleb', category: 'All' },
-    { id: 'kendrick', name: 'Kendrick', category: 'Trend' },
-    { id: 'lewis', name: 'Lewis', category: 'Premium', isPremium: true },
-    { id: 'doug', name: 'Doug', category: 'All' },
-    { id: 'carlos', name: 'Carlos', category: 'All' },
-    { id: 'luke', name: 'Luke', category: 'Speakers' },
-    { id: 'mark', name: 'Mark', category: 'Premium', isPremium: true },
-    { id: 'sara', name: 'Sara', category: 'Premium', isPremium: true },
-    { id: 'daniel', name: 'Daniel', category: 'Premium', isPremium: true },
-    { id: 'dan2', name: 'Dan 2', category: 'All' },
-    { id: 'hormozi4', name: 'Hormozi 4', category: 'Trend', isPremium: true },
-    { id: 'basic', name: 'Basic ThreeLines', category: 'All' },
-];
 
-const categories = ['All', 'Trend', 'New', 'Premium', 'Emoji', 'Speakers'] as const;
+// const styles: SubtitleStyle[] = [
+//     { id: 'matt', name: 'Matt', category: 'New', isNew: true },
+//     { id: 'ThreeLines', name: 'ThreeLines', category: 'Trend', isNew: true },
+//     { id: 'jack', name: 'Jack', category: 'New', isNew: true },
+//     { id: 'nick', name: 'Nick', category: 'New', isNew: true },
+//     { id: 'laura', name: 'Laura', category: 'Trend' },
+//     { id: 'kelly2', name: 'Kelly 2', category: 'Premium', isPremium: true },
+//     { id: 'caleb', name: 'Caleb', category: 'All' },
+//     { id: 'kendrick', name: 'Kendrick', category: 'Trend' },
+//     { id: 'lewis', name: 'Lewis', category: 'Premium', isPremium: true },
+//     { id: 'doug', name: 'Doug', category: 'All' },
+//     { id: 'carlos', name: 'Carlos', category: 'All' },
+//     { id: 'luke', name: 'Luke', category: 'Speakers' },
+//     { id: 'mark', name: 'Mark', category: 'Premium', isPremium: true },
+//     { id: 'sara', name: 'Sara', category: 'Premium', isPremium: true },
+//     { id: 'daniel', name: 'Daniel', category: 'Premium', isPremium: true },
+//     { id: 'dan2', name: 'Dan 2', category: 'All' },
+//     { id: 'hormozi4', name: 'Hormozi 4', category: 'Trend', isPremium: true },
+//     { id: 'basic', name: 'Basic ThreeLines', category: 'All' },
+// ];
+
+// const categories = ['All', 'Trend', 'New', 'Premium', 'Emoji', 'Speakers'] as const;
 
 export const UploadFlow: React.FC<{
     videoUrl: string;
