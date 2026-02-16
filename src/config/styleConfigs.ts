@@ -410,6 +410,38 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
             }
         }
     },
+    Combo: {
+        id: 'Combo',
+        name: 'Combo',
+        category: 'All',
+        fonts: {
+            bold: {
+                fontSize: 120,
+                fontWeight: 800,
+                fontFamily: 'Bebas Neue',
+                color: '#ffffff'
+            },
+            thin: {
+                fontSize: 50,
+                fontWeight: 100,
+                fontFamily: 'Inter',
+                color: '#ffffff'
+            },
+            normal: {
+                fontSize: 60,
+                fontWeight: 400,
+                fontFamily: 'Poppins',
+                color: '#ffffff'
+            },
+            italic: {
+                fontSize: 60,
+                fontWeight: 200,
+                fontFamily: 'Inter',
+                fontStyle: 'italic',
+                color: '#ffffff'
+            }
+        }
+    },
 
     // Add other styles (jess, jack, etc.) here...
 };
@@ -451,7 +483,7 @@ export const styles: SubtitleStyle[] = [
     { id: 'mark', name: 'Mark', category: 'Premium', isPremium: true },
     { id: 'FaB', name: 'Fade And Blur', category: 'Premium', isPremium: true },
     { id: 'FaB1', name: 'Fade And Blur1', category: 'Premium', isPremium: true },
-    { id: 'dan2', name: 'Dan 2', category: 'All' },
+    { id: 'Combo', name: 'Combo', category: 'All' },
     { id: 'hormozi4', name: 'Hormozi 4', category: 'Trend', isPremium: true },
     { id: 'basic', name: 'Basic ThreeLines', category: 'All' },
 ];

@@ -6,6 +6,7 @@ import { GradientBelow } from './Subtitles/GradientBelow';
 import { Glow } from './Subtitles/Glow';
 import { WithItalic } from './Subtitles/WithItalic';
 import { FadeAndBlur } from './Subtitles/FadeAndBlur';
+import { CombinedAnimation } from './Subtitles/CombinedAnimation';
 
 type StyleRendererProps = {
     group: SubtitleGroup;
@@ -33,7 +34,7 @@ export const StyleRenderer: React.FC<StyleRendererProps> = ({
             //     config={config}
             //     captionPadding={captionPadding}
             // />;
-            return <FadeAndBlur
+            return <CombinedAnimation
                 group={group}
                 config={config}
                 captionPadding={captionPadding}
