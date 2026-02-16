@@ -29,7 +29,7 @@ loadMontserrat();
 loadOswald();
 
 const LINE_SPACING = 0;
-const MAX_FONT_SIZE = 200; // Maximum allowed font size in pixels
+const MAX_FONT_SIZE = 100; // Maximum allowed font size in pixels
 
 // Animation types
 export type AnimationType =

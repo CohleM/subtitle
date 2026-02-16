@@ -313,7 +313,7 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
         category: 'All',
         fonts: {
             bold: {
-                fontSize: 80,
+                fontSize: 60,
                 fontWeight: 800,
                 fontFamily: 'Inter',
                 color: '#f6ff4d',
@@ -333,7 +333,7 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
             },
             italic: {
                 fontSize: 60,
-                fontWeight: 200,
+                fontWeight: 300,
                 fontFamily: 'Inter',
                 fontStyle: 'italic',
                 color: '#ffffff'
@@ -443,6 +443,47 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
         }
     },
 
+    Combo1: {
+        id: 'Combo1',
+        name: 'Combo1',
+        category: 'All',
+        fonts: {
+            bold: {
+                fontSize: 120,
+                fontWeight: 800,
+                fontFamily: 'Poppins',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+            },
+            thin: {
+                fontSize: 50,
+                fontWeight: 100,
+                fontFamily: 'Inter',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+            },
+            normal: {
+                fontSize: 60,
+                fontWeight: 400,
+                fontFamily: 'Poppins',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+            },
+            italic: {
+                fontSize: 60,
+                fontWeight: 300,
+                fontFamily: 'Inter',
+                fontStyle: 'italic',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+            }
+        }
+    },
+
     // Add other styles (jess, jack, etc.) here...
 };
 
@@ -484,7 +525,7 @@ export const styles: SubtitleStyle[] = [
     { id: 'FaB', name: 'Fade And Blur', category: 'Premium', isPremium: true },
     { id: 'FaB1', name: 'Fade And Blur1', category: 'Premium', isPremium: true },
     { id: 'Combo', name: 'Combo', category: 'All' },
-    { id: 'hormozi4', name: 'Hormozi 4', category: 'Trend', isPremium: true },
+    { id: 'Combo1', name: 'Combo1', category: 'Trend', isPremium: true },
     { id: 'basic', name: 'Basic ThreeLines', category: 'All' },
 ];
 
