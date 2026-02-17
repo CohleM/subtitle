@@ -2,7 +2,7 @@
 import { SubtitleStyleConfig } from '../../types/style';
 import { SubtitleGroup } from '../../types/subtitles';
 import { EqualWidth } from './Subtitles/EqualWidth';
-import { GradientBelow } from './Subtitles/GradientBelow';
+import { GradientBase } from './Subtitles/GradientBase';
 import { Glow } from './Subtitles/Glow';
 import { WithItalic } from './Subtitles/WithItalic';
 import { FadeAndBlur } from './Subtitles/FadeAndBlur';
@@ -29,7 +29,13 @@ export const StyleRenderer: React.FC<StyleRendererProps> = ({
         case 'matt':
         case 'jess':
         case 'jack':
-        case 'basic':
+        case 'GB':
+            return <GradientBase
+                group={group}
+                config={config}
+                captionPadding={captionPadding}
+            />;
+
         case 'Glow':
         case 'GlowI': //normal and italic
             return <Glow

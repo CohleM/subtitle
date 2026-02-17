@@ -317,26 +317,30 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
                 fontWeight: 800,
                 fontFamily: 'Inter',
                 color: '#f6ff4d',
-                uppercase: true
+                uppercase: true,
+                animationType: 'slide-up'
             },
             thin: {
                 fontSize: 50,
                 fontWeight: 100,
                 fontFamily: 'Inter',
-                color: '#ffffff'
+                color: '#ffffff',
+                animationType: 'slide-up'
             },
             normal: {
                 fontSize: 60,
                 fontWeight: 800,
                 fontFamily: 'Inter',
-                color: '#ffffff'
+                color: '#ffffff',
+                animationType: 'slide-up'
             },
             italic: {
                 fontSize: 60,
                 fontWeight: 300,
                 fontFamily: 'Inter',
                 fontStyle: 'italic',
-                color: '#ffffff'
+                color: '#ffffff',
+                animationType: 'slide-up'
             }
         }
     },
