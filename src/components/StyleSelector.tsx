@@ -84,10 +84,12 @@ export const StyleSelector: React.FC<{
                                         }`}
                                 >
                                     {/* Preview Placeholder */}
-                                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-300 group-hover:from-gray-200 group-hover:to-gray-300 transition-colors">
-                                        <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
-                                            {style.name}
-                                        </span>
+                                    <div className="absolute inset-0 bg-gray-200">
+                                        <img
+                                            src={isHovered ? `/previews/${style.id}.gif` : `/previews/png/${style.id}.png`}
+                                            alt={style.name}
+                                            className="w-full h-full object-cover"
+                                        />
                                     </div>
 
                                     {/* Badges */}

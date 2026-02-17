@@ -33,11 +33,11 @@ loadOswald();
 // ============================================
 const LINE_SPACING = -25; // Negative spacing for overlapping/intersecting effect
 const FADE_OUT_DURATION_FRAMES = 30; // How long the fade out animation takes
-const MAX_WORD_DISPLAY_SECONDS = 2; // Maximum time a word stays on screen
+const MAX_WORD_DISPLAY_SECONDS = 3; // Maximum time a word stays on screen
 // How many frames before the subtitle's real start time to begin the animation.
 // This ensures the word reaches full visibility exactly when it's supposed to appear.
 // Increase this value if animations still feel late; decrease if words appear too early.
-const ANIMATION_ANTICIPATION_FRAMES = 5;
+const ANIMATION_ANTICIPATION_FRAMES = 4;
 // ============================================
 
 // Get font styles from config safely

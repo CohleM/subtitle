@@ -479,7 +479,7 @@ function PlayerPageContent() {
             router.push(`/view/${data.jobId}`)
             console.log("Render job created:", data.jobId);
 
-            alert("Export started successfully!");
+            // alert("Export started successfully!");
 
         } catch (error) {
             console.error("Export error:", error);
