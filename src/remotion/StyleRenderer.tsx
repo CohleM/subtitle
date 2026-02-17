@@ -27,8 +27,19 @@ export const StyleRenderer: React.FC<StyleRendererProps> = ({
     const config = customConfigs
     switch (style) {
         case 'matt':
-        case 'jess':
-        case 'jack':
+        case 'FaB':
+            return <FadeAndBlur
+                group={group}
+                config={config}
+                captionPadding={captionPadding}
+            />;
+
+        case 'EW':
+            return <EqualWidth
+                group={group}
+                config={config}
+                captionPadding={captionPadding}
+            />;
         case 'GBI':
         case 'GB':
             return <GradientBase

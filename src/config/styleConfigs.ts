@@ -391,13 +391,15 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
                 fontWeight: 800,
                 fontFamily: 'Inter',
                 color: '#f6ff4d',
-                uppercase: true
+                uppercase: true,
+                animationType: 'fade-blur'
             },
             thin: {
                 fontSize: 50,
                 fontWeight: 100,
                 fontFamily: 'Inter',
-                color: '#ffffff'
+                color: '#ffffff',
+                animationType: 'fade-blur'
             },
             normal: {
                 fontSize: 60,
@@ -406,13 +408,16 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
                 color: '#ffffff',
                 shadow: "large",
                 shadowColor: '#ffffff',
+                animationType: 'fade-blur'
+
             },
             italic: {
                 fontSize: 60,
                 fontWeight: 200,
                 fontFamily: 'Inter',
                 fontStyle: 'italic',
-                color: '#ffffff'
+                color: '#ffffff',
+                animationType: 'fade-blur'
             }
         }
     },
