@@ -12,7 +12,7 @@ import {
 } from 'remotion';
 import { memo } from 'react';
 import { SubtitleGroup, Line } from '../../../types/subtitles';
-import { SubtitleStyleConfig, FontStyleDefinition } from '../../../types/style';
+import { SubtitleStyleConfig, FontStyleDefinition, AnimationType } from '../../../types/style';
 
 // Pre-load common fonts to avoid delayRender issues
 import { loadFont as loadInter } from '@remotion/google-fonts/Inter';
@@ -29,6 +29,10 @@ loadMontserrat();
 loadOswald();
 
 const LINE_SPACING = 0;
+const ANIMATION_ANTICIPATION_FRAMES = 4;
+const FADE_OUT_DURATION_FRAMES = 30;
+const MAX_WORD_DISPLAY_SECONDS = 3;
+const MAX_FONT_SIZE = 100; // ✨ Maximum allowed font size in pixels
 
 // Get font styles from config safely
 const getFontStyle = (config: SubtitleStyleConfig, fontType: string): FontStyleDefinition => {
@@ -40,6 +44,12 @@ const getFontStyle = (config: SubtitleStyleConfig, fontType: string): FontStyleD
     };
 
     return config.fonts[fontType as keyof typeof config.fonts] || defaultStyle;
+};
+
+// Get animation type for a specific font type from config
+const getAnimationType = (config: SubtitleStyleConfig, fontType: string): AnimationType => {
+    const style = config.fonts[fontType as keyof typeof config.fonts];
+    return style?.animationType || 'fade-blur';
 };
 
 // Hook to wait for Google Fonts to load based on config
@@ -74,7 +84,7 @@ const useFontsLoaded = (config: SubtitleStyleConfig) => {
     return loaded;
 };
 
-// ✨ NEW: Measure text width with a given font style
+// Measure text width with a given font style
 const measureTextWidth = (
     text: string,
     style: FontStyleDefinition
@@ -97,7 +107,7 @@ const measureTextWidth = (
     return width;
 };
 
-// ✨ NEW: Calculate font size scale factors for each line
+// ✨ UPDATED: Calculate font size scale factors with max font size capping
 const calculateFontScales = (
     lines: Line[],
     config: SubtitleStyleConfig
@@ -117,10 +127,21 @@ const calculateFontScales = (
     // Find the maximum width
     const maxWidth = Math.max(...lineWidths.map(lw => lw.width));
 
-    // Calculate scale factor for each line to match max width
+    // Calculate scale factor for each line with max font size cap
     const scales = lineWidths.map((lw) => {
         if (lw.width === 0) return 1;
-        return maxWidth / lw.width;
+
+        // Calculate what the scaled font size would be
+        const rawScale = maxWidth / lw.width;
+        const scaledFontSize = lw.fontSize * rawScale;
+
+        // ✨ If scaled font size exceeds MAX_FONT_SIZE, cap it
+        if (scaledFontSize > MAX_FONT_SIZE) {
+            return MAX_FONT_SIZE / lw.fontSize;
+        }
+
+        // Otherwise use the original scale to match widths
+        return rawScale;
     });
 
     return scales;
@@ -136,7 +157,7 @@ const measureActualTextHeight = (
     const tempDiv = document.createElement('div');
     tempDiv.style.position = 'absolute';
     tempDiv.style.visibility = 'hidden';
-    tempDiv.style.fontSize = `${style.fontSize * scale}px`; // ✨ Apply scale
+    tempDiv.style.fontSize = `${style.fontSize * scale}px`;
     tempDiv.style.fontFamily = `"${style.fontFamily}", sans-serif`;
     tempDiv.style.fontWeight = String(style.fontWeight);
     tempDiv.style.fontStyle = style.fontStyle || 'normal';
@@ -191,7 +212,7 @@ const calculateLinePositions = (
 
 // Build text shadow based on shadow settings
 const buildTextShadow = (style: FontStyleDefinition): string => {
-    const shadows: string[] = ['3px 3px 6px rgba(0,0,0,0.9)']; // Default shadow
+    const shadows: string[] = ['3px 3px 6px rgba(0,0,0,0.9)'];
 
     if (style.shadow && style.shadow !== 'none') {
         const blur = style.shadow === 'small' ? 10 : style.shadow === 'medium' ? 20 : 30;
@@ -202,7 +223,6 @@ const buildTextShadow = (style: FontStyleDefinition): string => {
     if (style.strokeWeight && style.strokeWeight !== 'none') {
         const width = style.strokeWeight === 'small' ? 1 : style.strokeWeight === 'medium' ? 2 : 3;
         const color = style.strokeColor || '#000000';
-        // Create outline effect using multiple shadows
         for (let x = -width; x <= width; x++) {
             for (let y = -width; y <= width; y++) {
                 if (x !== 0 || y !== 0) {
@@ -215,22 +235,13 @@ const buildTextShadow = (style: FontStyleDefinition): string => {
     return shadows.join(', ');
 };
 
-const WordText = memo(function WordText({
-    word,
-    wordIndex,
-    lineStart,
-    wordStart,
-}: {
-    word: string;
-    wordIndex: number;
-    lineStart: number;
-    wordStart: number;
-}) {
-    const frame = useCurrentFrame();
-    const { fps } = useVideoConfig();
-
-    const relativeWordStart = wordStart - lineStart;
-    const wordStartFrame = Math.round(relativeWordStart * fps);
+// ✨ NEW: Hook to calculate animation values based on type
+const useWordAnimation = (
+    animationType: AnimationType,
+    frame: number,
+    fps: number,
+    wordStartFrame: number
+) => {
     const animationFrame = Math.max(0, frame - wordStartFrame);
 
     const springValue = useMemo(() => spring({
@@ -239,28 +250,129 @@ const WordText = memo(function WordText({
         config: { damping: 100, stiffness: 100 },
     }), [animationFrame, fps]);
 
-    const translateY = useMemo(() =>
-        interpolate(springValue, [0, 1], [50, 0]),
-        [springValue]);
+    return useMemo(() => {
+        switch (animationType) {
+            case 'slide-up':
+                return {
+                    transform: `translateY(${interpolate(springValue, [0, 1], [50, 0])}px)`,
+                    opacity: interpolate(springValue, [0, 1], [0, 1]),
+                    filter: `blur(${interpolate(springValue, [0, 1], [4, 0])}px)`,
+                };
 
-    const opacity = useMemo(() =>
-        interpolate(springValue, [0, 1], [0, 1]),
-        [springValue]);
+            case 'slide-down':
+                return {
+                    transform: `translateY(${interpolate(springValue, [0, 1], [-50, 0])}px)`,
+                    opacity: interpolate(springValue, [0, 1], [0, 1]),
+                    filter: `blur(${interpolate(springValue, [0, 1], [4, 0])}px)`,
+                };
+
+            case 'slide-left':
+                return {
+                    transform: `translateX(${interpolate(springValue, [0, 1], [100, 0])}px)`,
+                    opacity: interpolate(springValue, [0, 1], [0, 1]),
+                    filter: `blur(${interpolate(springValue, [0, 1], [4, 0])}px)`,
+                };
+
+            case 'slide-right':
+                return {
+                    transform: `translateX(${interpolate(springValue, [0, 1], [-100, 0])}px)`,
+                    opacity: interpolate(springValue, [0, 1], [0, 1]),
+                    filter: `blur(${interpolate(springValue, [0, 1], [4, 0])}px)`,
+                };
+
+            case 'scale':
+                return {
+                    transform: `scale(${interpolate(springValue, [0, 1], [0.5, 1])})`,
+                    opacity: interpolate(springValue, [0, 1], [0, 1]),
+                    filter: `blur(${interpolate(springValue, [0, 1], [4, 0])}px)`,
+                };
+
+            case 'fade-blur':
+                return {
+                    transform: 'none',
+                    opacity: interpolate(springValue, [0, 1], [0, 1]),
+                    filter: `blur(${interpolate(springValue, [0, 1], [10, 0])}px)`,
+                };
+
+            default:
+                return {
+                    transform: `translateY(${interpolate(springValue, [0, 1], [50, 0])}px)`,
+                    opacity: interpolate(springValue, [0, 1], [0, 1]),
+                    filter: `blur(${interpolate(springValue, [0, 1], [4, 0])}px)`,
+                };
+        }
+    }, [animationType, springValue]);
+};
+
+// ✨ UPDATED: WordText now accepts animationType prop
+const WordText = memo(function WordText({
+    word,
+    wordIndex,
+    lineStart,
+    wordStart,
+    wordEnd,
+    animationType,
+}: {
+    word: string;
+    wordIndex: number;
+    lineStart: number;
+    wordStart: number;
+    wordEnd: number;
+    animationType: AnimationType;
+}) {
+    const frame = useCurrentFrame();
+    const { fps } = useVideoConfig();
+
+    const relativeWordStart = wordStart - lineStart;
+    const wordStartFrame = Math.round(relativeWordStart * fps) - ANIMATION_ANTICIPATION_FRAMES;
+    const realWordStartFrame = Math.round(relativeWordStart * fps);
+
+    const maxDisplayFrames = MAX_WORD_DISPLAY_SECONDS * fps;
+    const fadeOutStartFrame = realWordStartFrame + maxDisplayFrames;
+
+    const relativeWordEnd = wordEnd - lineStart;
+    const wordEndFrame = Math.round(relativeWordEnd * fps);
+    const fadeOutEndFrame = Math.min(fadeOutStartFrame + FADE_OUT_DURATION_FRAMES, wordEndFrame);
+
+    // ✨ Use the new animation hook
+    const entryAnimation = useWordAnimation(animationType, frame, fps, wordStartFrame);
+
+    const { opacity, transform, filter } = useMemo(() => {
+        const entryOpacity = entryAnimation.opacity;
+        const entryTransform = entryAnimation.transform;
+        const entryFilter = entryAnimation.filter;
+
+        if (frame < fadeOutStartFrame) {
+            return { opacity: entryOpacity, transform: entryTransform, filter: entryFilter };
+        }
+
+        if (frame >= fadeOutEndFrame) {
+            return { opacity: 0, transform: entryTransform, filter: 'blur(10px)' };
+        }
+
+        const fadeOutProgress = (frame - fadeOutStartFrame) / (fadeOutEndFrame - fadeOutStartFrame);
+        const fadeOutOpacity = interpolate(fadeOutProgress, [0, 1], [entryOpacity, 0]);
+        const fadeOutBlur = interpolate(fadeOutProgress, [0, 1], [0, 10]);
+
+        return { opacity: fadeOutOpacity, transform: entryTransform, filter: `blur(${fadeOutBlur}px)` };
+    }, [entryAnimation, frame, fadeOutStartFrame, fadeOutEndFrame]);
 
     return (
         <span style={{
             display: 'inline-block',
-            transform: `translateY(${translateY}px)`,
+            transform,
             opacity,
+            filter,
             marginRight: '0.3em',
             whiteSpace: 'pre',
+            willChange: 'transform, opacity, filter',
         }}>
             {word}
         </span>
     );
 });
 
-// ✨ UPDATED: LineText now accepts fontScale prop
+// ✨ UPDATED: LineText now accepts fontScale and animationType props
 const LineText = memo(function LineText({
     line,
     lineIndex,
@@ -268,6 +380,7 @@ const LineText = memo(function LineText({
     style,
     captionPadding,
     fontScale,
+    animationType,
 }: {
     line: Line;
     lineIndex: number;
@@ -275,6 +388,7 @@ const LineText = memo(function LineText({
     style: FontStyleDefinition;
     captionPadding: number;
     fontScale: number;
+    animationType: AnimationType;
 }) {
     const textShadow = useMemo(() => buildTextShadow(style), [style]);
 
@@ -292,7 +406,7 @@ const LineText = memo(function LineText({
 
     const textStyle = useMemo(() => ({
         transform: `translateY(${translateYOffset}px)`,
-        fontSize: style.fontSize * fontScale, // ✨ Apply font scale
+        fontSize: style.fontSize * fontScale,
         fontFamily: `"${style.fontFamily}", sans-serif`,
         fontWeight: style.fontWeight,
         fontStyle: style.fontStyle || 'normal',
@@ -306,7 +420,7 @@ const LineText = memo(function LineText({
         alignItems: 'baseline',
         textTransform: style.uppercase ? 'uppercase' : 'none' as const,
         WebkitTextStroke: textStroke,
-    }), [translateYOffset, style, textShadow, textStroke, fontScale]); // ✨ Added fontScale dependency
+    }), [translateYOffset, style, textShadow, textStroke, fontScale]);
 
     return (
         <AbsoluteFill style={containerStyle}>
@@ -318,6 +432,8 @@ const LineText = memo(function LineText({
                         wordIndex={wordIndex}
                         lineStart={line.start}
                         wordStart={word.start}
+                        wordEnd={word.end}
+                        animationType={animationType} // ✨ Pass animation type
                     />
                 ))}
             </div>
@@ -346,7 +462,7 @@ export const EqualWidth: React.FC<ThreeLinesProps> = ({
 
     const containerWidth = width * 0.9;
 
-    // ✨ Calculate font scales to match widths
+    // Calculate font scales with max font size capping
     const fontScales = useMemo(() => {
         if (!fontsLoaded) return [];
         return calculateFontScales(group.lines, config);
@@ -365,8 +481,11 @@ export const EqualWidth: React.FC<ThreeLinesProps> = ({
         <AbsoluteFill>
             {group.lines.map((line, lineIndex) => {
                 const relativeStart = line.start - group.start;
-                const from = Math.round(relativeStart * fps);
+                const from = Math.max(0, Math.round(relativeStart * fps) - ANIMATION_ANTICIPATION_FRAMES);
                 const fontStyle = getFontStyle(config, line.font_type);
+
+                // ✨ Get animation type based on the line's font_type from config
+                const animationType = getAnimationType(config, line.font_type);
 
                 return (
                     <Sequence
@@ -379,7 +498,8 @@ export const EqualWidth: React.FC<ThreeLinesProps> = ({
                             translateYOffset={lineOffsets[lineIndex]}
                             style={fontStyle}
                             captionPadding={captionPadding}
-                            fontScale={fontScales[lineIndex]} // ✨ Pass the scale factor
+                            fontScale={fontScales[lineIndex]}
+                            animationType={animationType} // ✨ Pass animation type
                         />
                     </Sequence>
                 );
@@ -387,30 +507,3 @@ export const EqualWidth: React.FC<ThreeLinesProps> = ({
         </AbsoluteFill>
     );
 };
-
-// export interface FontStyleDefinition {
-//     fontSize: number;
-//     fontWeight: number;
-//     fontFamily: string;
-//     fontStyle?: 'normal' | 'italic';
-//     color?: string;
-//     uppercase?: boolean;
-//     strokeWeight?: 'none' | 'small' | 'medium' | 'large';
-//     strokeColor?: string;
-//     shadow?: 'none' | 'small' | 'medium' | 'large';
-//     shadowColor?: string;
-// }
-
-// export interface SubtitleStyleConfig {
-//     id: string;
-//     name: string;
-//     category: string;
-//     isNew?: boolean;
-//     isPremium?: boolean;
-//     fonts: {
-//         bold: FontStyleDefinition;
-//         thin: FontStyleDefinition;
-//         normal: FontStyleDefinition;
-//         italic: FontStyleDefinition;
-//     };
-// }

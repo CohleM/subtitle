@@ -35,7 +35,8 @@ loadCormorantGaramond();
 // ============================================
 const LINE_SPACING = 0;
 const FADE_OUT_DURATION_FRAMES = 30; // How long the fade out animation takes
-const MAX_WORD_DISPLAY_SECONDS = 2; // Maximum time a word stays on screen
+const MAX_WORD_DISPLAY_SECONDS = 3; // Maximum time a word stays on screen
+const ANIMATION_ANTICIPATION_FRAMES = 4;
 // ============================================
 
 // Animation types
@@ -267,12 +268,13 @@ const WordText = memo(function WordText({
     const { fps } = useVideoConfig();
 
     const relativeWordStart = wordStart - lineStart;
-    const wordStartFrame = Math.round(relativeWordStart * fps);
+    const wordStartFrame = Math.round(relativeWordStart * fps) - ANIMATION_ANTICIPATION_FRAMES;
+    const realWordStartFrame = Math.round(relativeWordStart * fps);
     // const animationFrame = Math.max(0, frame - wordStartFrame);
 
     // Calculate when this word should start fading out (2 seconds after appearance)
     const maxDisplayFrames = MAX_WORD_DISPLAY_SECONDS * fps;
-    const fadeOutStartFrame = wordStartFrame + maxDisplayFrames;
+    const fadeOutStartFrame = realWordStartFrame + maxDisplayFrames;
 
     // Determine fade out end based on either 2-second limit or line end, whichever comes first
     const relativeWordEnd = wordEnd - lineStart;
@@ -439,7 +441,7 @@ export const NormalAndBold: React.FC<ThreeLinesProps> = ({
         <AbsoluteFill>
             {group.lines.map((line, lineIndex) => {
                 const relativeStart = line.start - group.start;
-                const from = Math.round(relativeStart * fps);
+                const from = Math.max(0, Math.round(relativeStart * fps) - ANIMATION_ANTICIPATION_FRAMES);
                 const fontStyle = getFontStyle(config, line.font_type);
 
                 // Get animation type based on the line's font_type

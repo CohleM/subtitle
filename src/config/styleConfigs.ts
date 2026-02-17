@@ -317,6 +317,43 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
                 fontWeight: 800,
                 fontFamily: 'Inter',
                 color: '#f6ff4d',
+                uppercase: false,
+                animationType: 'slide-up'
+            },
+            thin: {
+                fontSize: 50,
+                fontWeight: 100,
+                fontFamily: 'Inter',
+                color: '#ffffff',
+                animationType: 'fade-blur'
+            },
+            normal: {
+                fontSize: 60,
+                fontWeight: 800,
+                fontFamily: 'Inter',
+                color: '#ffffff',
+                animationType: 'fade-blur'
+            },
+            italic: {
+                fontSize: 60,
+                fontWeight: 300,
+                fontFamily: 'Inter',
+                fontStyle: 'italic',
+                color: '#ffffff',
+                animationType: 'slide-up'
+            }
+        }
+    },
+    GBI: {
+        id: 'GBI',
+        name: 'Gradient Base Italic',
+        category: 'All',
+        fonts: {
+            bold: {
+                fontSize: 60,
+                fontWeight: 800,
+                fontFamily: 'Inter',
+                color: '#f6ff4d',
                 uppercase: true,
                 animationType: 'slide-up'
             },
@@ -325,21 +362,21 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
                 fontWeight: 100,
                 fontFamily: 'Inter',
                 color: '#ffffff',
-                animationType: 'slide-up'
+                animationType: 'fade-blur'
             },
             normal: {
                 fontSize: 60,
                 fontWeight: 800,
                 fontFamily: 'Inter',
                 color: '#ffffff',
-                animationType: 'slide-up'
+                animationType: 'fade-blur'
             },
             italic: {
-                fontSize: 60,
-                fontWeight: 300,
+                fontSize: 100,
+                fontWeight: 700,
                 fontFamily: 'Inter',
                 fontStyle: 'italic',
-                color: '#ffffff',
+                color: '#f6ff4d',
                 animationType: 'slide-up'
             }
         }
@@ -634,6 +671,50 @@ export const defaultStyleConfigs: Record<string, SubtitleStyleConfig> = {
             }
         }
     },
+    EW: {
+        id: 'EW',
+        name: 'Equal Width',
+        category: 'All',
+        fonts: {
+            bold: {
+                fontSize: 100,
+                fontWeight: 900,
+                fontFamily: 'Poppins',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'slide-up'
+            },
+            thin: {
+                fontSize: 50,
+                fontWeight: 100,
+                fontFamily: 'Inter',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'slide-up'
+            },
+            normal: {
+                fontSize: 60,
+                fontWeight: 400,
+                fontFamily: 'Poppins',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'slide-up'
+            },
+            italic: {
+                fontSize: 60,
+                fontWeight: 300,
+                fontFamily: 'Inter',
+                fontStyle: 'italic',
+                color: '#ffffff',
+                shadow: "large",
+                shadowColor: '#ffffff',
+                animationType: 'slide-up'
+            }
+        }
+    },
 
     // Add other styles (jess, jack, etc.) here...
 };
@@ -670,9 +751,11 @@ export const styles: SubtitleStyle[] = [
     { id: 'kendrick', name: 'Kendrick', category: 'Trend' },
     { id: 'lewis', name: 'Lewis', category: 'Premium', isPremium: true },
     { id: 'GB', name: 'Gradient Base', category: 'All' },
+    { id: 'GBI', name: 'Gradient Base Italic', category: 'All' },
     { id: 'carlos', name: 'Carlos', category: 'All' },
     { id: 'luke', name: 'Luke', category: 'Speakers' },
     { id: 'mark', name: 'Mark', category: 'Premium', isPremium: true },
+    { id: 'EW', name: 'Equal Width', category: 'Premium', isPremium: true },
     { id: 'Glow', name: 'Glow', category: 'Premium', isPremium: true },
     { id: 'GlowI', name: 'Glow Italic', category: 'Premium', isPremium: true },
     { id: 'FaB', name: 'Fade And Blur', category: 'Premium', isPremium: true },

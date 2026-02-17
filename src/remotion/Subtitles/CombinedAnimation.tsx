@@ -30,6 +30,9 @@ loadOswald();
 
 const LINE_SPACING = 0;
 const MAX_FONT_SIZE = 100; // Maximum allowed font size in pixels
+const ANIMATION_ANTICIPATION_FRAMES = 4;
+const FADE_OUT_DURATION_FRAMES = 30;
+const MAX_WORD_DISPLAY_SECONDS = 3;
 
 // Animation types
 export type AnimationType =
@@ -371,28 +374,58 @@ const WordText = memo(function WordText({
     wordIndex,
     lineStart,
     wordStart,
+    wordEnd,
     animationType,
 }: {
     word: string;
     wordIndex: number;
     lineStart: number;
     wordStart: number;
+    wordEnd: number;
     animationType: AnimationType;
 }) {
     const frame = useCurrentFrame();
     const { fps } = useVideoConfig();
 
     const relativeWordStart = wordStart - lineStart;
-    const wordStartFrame = Math.round(relativeWordStart * fps);
+    const wordStartFrame = Math.round(relativeWordStart * fps) - ANIMATION_ANTICIPATION_FRAMES;
+    const realWordStartFrame = Math.round(relativeWordStart * fps);
 
-    const animation = useWordAnimation(animationType, frame, fps, wordStartFrame);
+    const maxDisplayFrames = MAX_WORD_DISPLAY_SECONDS * fps;
+    const fadeOutStartFrame = realWordStartFrame + maxDisplayFrames;
+
+    const relativeWordEnd = wordEnd - lineStart;
+    const wordEndFrame = Math.round(relativeWordEnd * fps);
+    const fadeOutEndFrame = Math.min(fadeOutStartFrame + FADE_OUT_DURATION_FRAMES, wordEndFrame);
+
+    const entryAnimation = useWordAnimation(animationType, frame, fps, wordStartFrame);
+
+    const { opacity, transform, filter } = useMemo(() => {
+        const entryOpacity = entryAnimation.opacity;
+        const entryTransform = entryAnimation.transform;
+        const entryFilter = entryAnimation.filter;
+
+        if (frame < fadeOutStartFrame) {
+            return { opacity: entryOpacity, transform: entryTransform, filter: entryFilter };
+        }
+
+        if (frame >= fadeOutEndFrame) {
+            return { opacity: 0, transform: entryTransform, filter: 'blur(10px)' };
+        }
+
+        const fadeOutProgress = (frame - fadeOutStartFrame) / (fadeOutEndFrame - fadeOutStartFrame);
+        const fadeOutOpacity = interpolate(fadeOutProgress, [0, 1], [entryOpacity, 0]);
+        const fadeOutBlur = interpolate(fadeOutProgress, [0, 1], [0, 10]);
+
+        return { opacity: fadeOutOpacity, transform: entryTransform, filter: `blur(${fadeOutBlur}px)` };
+    }, [entryAnimation, frame, fadeOutStartFrame, fadeOutEndFrame]);
 
     return (
         <span style={{
             display: 'inline-block',
-            transform: animation.transform,
-            opacity: animation.opacity,
-            filter: animation.filter,
+            transform,
+            opacity,
+            filter,
             marginRight: '0.3em',
             whiteSpace: 'pre',
             willChange: 'transform, opacity, filter',
@@ -410,6 +443,7 @@ const LineText = memo(function LineText({
     captionPadding,
     animationType,
     fontScale,
+    lineEnd,
 }: {
     line: Line;
     lineIndex: number;
@@ -418,6 +452,7 @@ const LineText = memo(function LineText({
     captionPadding: number;
     animationType: AnimationType;
     fontScale: number;
+    lineEnd: number;
 }) {
     const textShadow = useMemo(() => buildTextShadow(style), [style]);
 
@@ -461,6 +496,7 @@ const LineText = memo(function LineText({
                         wordIndex={wordIndex}
                         lineStart={line.start}
                         wordStart={word.start}
+                        wordEnd={word.end}
                         animationType={animationType}
                     />
                 ))}
@@ -521,9 +557,12 @@ export const CombinedAnimation: React.FC<ThreeLinesProps> = ({
         <AbsoluteFill>
             {group.lines.map((line, lineIndex) => {
                 const relativeStart = line.start - group.start;
-                const from = Math.round(relativeStart * fps);
+                const from = Math.max(0, Math.round(relativeStart * fps) - ANIMATION_ANTICIPATION_FRAMES);
                 const fontStyle = getFontStyle(config, line.font_type);
                 const animationType = lineAnimations[lineIndex];
+
+                const nextLine = group.lines[lineIndex + 1];
+                const lineEndTime = nextLine ? nextLine.start : (group.start + (line.words[line.words.length - 1]?.end || line.end));
 
                 return (
                     <Sequence
@@ -538,6 +577,7 @@ export const CombinedAnimation: React.FC<ThreeLinesProps> = ({
                             captionPadding={captionPadding}
                             animationType={animationType}
                             fontScale={fontScales[lineIndex]}
+                            lineEnd={lineEndTime}
                         />
                     </Sequence>
                 );

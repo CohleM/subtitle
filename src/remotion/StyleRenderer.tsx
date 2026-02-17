@@ -29,6 +29,7 @@ export const StyleRenderer: React.FC<StyleRendererProps> = ({
         case 'matt':
         case 'jess':
         case 'jack':
+        case 'GBI':
         case 'GB':
             return <GradientBase
                 group={group}
