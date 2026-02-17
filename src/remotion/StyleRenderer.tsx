@@ -4,10 +4,10 @@ import { SubtitleGroup } from '../../types/subtitles';
 import { EqualWidth } from './Subtitles/EqualWidth';
 import { GradientBase } from './Subtitles/GradientBase';
 import { Glow } from './Subtitles/Glow';
-import { WithItalic } from './Subtitles/WithItalic';
+
 import { FadeAndBlur } from './Subtitles/FadeAndBlur';
 import { CombinedAnimation } from './Subtitles/CombinedAnimation';
-import { NormalAndItalic } from './Subtitles/NormalAndItalic';
+// import { NormalAndItalic } from './Subtitles/NormalAndItalic';
 import { NormalAndBold } from "./Subtitles/NormalAndBold"
 
 type StyleRendererProps = {
@@ -61,12 +61,13 @@ export const StyleRenderer: React.FC<StyleRendererProps> = ({
                 config={config}
                 captionPadding={captionPadding}
             />;
-        case 'NaI': //normal and italic
-            return <NormalAndItalic
-                group={group}
-                config={config}
-                captionPadding={captionPadding}
-            />;
+        // case 'NaI': //normal and italic
+        //     return <NormalAndItalic
+        //         group={group}
+        //         config={config}
+        //         captionPadding={captionPadding}
+        //     />;
+        case 'NaI':
         case 'NaB': //normal and italic
             return <NormalAndBold
                 group={group}

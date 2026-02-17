@@ -746,28 +746,15 @@ export const getStyleConfig = (
 
 
 export const styles: SubtitleStyle[] = [
-    { id: 'matt', name: 'Matt', category: 'New', isNew: true },
-    { id: 'ThreeLines', name: 'ThreeLines', category: 'Trend', isNew: true },
-    { id: 'jack', name: 'Jack', category: 'New', isNew: true },
-    { id: 'nick', name: 'Nick', category: 'New', isNew: true },
-    { id: 'laura', name: 'Laura', category: 'Trend' },
-    { id: 'kelly2', name: 'Kelly 2', category: 'Premium', isPremium: true },
-    { id: 'caleb', name: 'Caleb', category: 'All' },
-    { id: 'kendrick', name: 'Kendrick', category: 'Trend' },
-    { id: 'lewis', name: 'Lewis', category: 'Premium', isPremium: true },
     { id: 'GB', name: 'Gradient Base', category: 'All' },
     { id: 'GBI', name: 'Gradient Base Italic', category: 'All' },
-    { id: 'carlos', name: 'Carlos', category: 'All' },
-    { id: 'luke', name: 'Luke', category: 'Speakers' },
-    { id: 'mark', name: 'Mark', category: 'Premium', isPremium: true },
-    { id: 'EW', name: 'Equal Width', category: 'Premium', isPremium: true },
-    { id: 'Glow', name: 'Glow', category: 'Premium', isPremium: true },
-    { id: 'GlowI', name: 'Glow Italic', category: 'Premium', isPremium: true },
-    { id: 'FaB', name: 'Fade And Blur', category: 'Premium', isPremium: true },
-    { id: 'Combo', name: 'Combo', category: 'All' },
-    { id: 'NaI', name: 'Normal and Italic', category: 'Trend', isPremium: true },
-    { id: 'NaB', name: 'Normal and Bold', category: 'Trend', isPremium: true },
-    { id: 'basic', name: 'Basic ThreeLines', category: 'All' },
+    { id: 'EW', name: 'Equal Width', category: 'All', isPremium: true },
+    { id: 'Glow', name: 'Glow', category: 'All' },
+    { id: 'GlowI', name: 'Glow Italic', category: 'All' },
+    { id: 'FaB', name: 'Fade And Blur', category: 'All', },
+    { id: 'Combo', name: 'Combo', category: 'Premium' },
+    { id: 'NaI', name: 'Normal and Italic', category: 'All', },
+    { id: 'NaB', name: 'Normal and Bold', category: 'All', },
 ];
 
-export const categories = ['All', 'Trend', 'New', 'Premium', 'Emoji', 'Speakers'] as const;
+export const categories = ['All', 'Premium'] as const;

@@ -81,6 +81,8 @@ function RenderViewPageContent() {
         };
     }, [jobId, apiUrl, accessToken]);
 
+    const progressPercent = (data?.progress ?? 0) * 100;
+
     // Initial loading state — no data yet
     if (!data && !error) {
         return (
@@ -92,6 +94,8 @@ function RenderViewPageContent() {
             </div>
         );
     }
+
+
 
     return (
         <div className="h-screen w-full bg-white flex flex-col overflow-hidden">
@@ -129,12 +133,12 @@ function RenderViewPageContent() {
                             <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                                 <div
                                     className="bg-black h-full rounded-full transition-all duration-500"
-                                    style={{ width: `${Math.max(data.progress ?? 0, 4)}%` }}
+                                    style={{ width: `${Math.max(progressPercent, 4)}%` }}
                                 />
                             </div>
 
                             <p className="text-xs text-gray-400 mt-3 uppercase tracking-wider">
-                                {data.progress ?? 0}% complete
+                                {Math.round(progressPercent)}% complete
                             </p>
 
                         </div>

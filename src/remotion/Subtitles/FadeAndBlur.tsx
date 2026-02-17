@@ -325,7 +325,7 @@ const useLineFadeOut = (
             return { opacity: 1, blur: 0 };
         }
 
-        const relativeLineStart = (lineStart - groupStart) * fps;
+        // const relativeLineStart = (lineStart - groupStart) * fps;
         const relativeNextLineStart = (nextLineStart - groupStart) * fps;
 
         const fadeOutStart = relativeNextLineStart + LINE_OVERLAP_FRAMES;
