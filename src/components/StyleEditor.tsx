@@ -298,7 +298,7 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                                                 value={currentFontStyle.fontSize}
                                                 onChange={(e) => handleUpdateFontStyle(selectedFontType, { fontSize: Number(e.target.value) })}
                                                 className="flex-1 h-1.5 bg-[var(--color-bg-secondary)] rounded-full appearance-none cursor-pointer accent-[var(--color-primary)]"
-                                                disabled={isComboStyle}
+
                                             />
                                             <span className={`text-xs font-mono w-12 text-right ${isComboStyle ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)]'}`}>
                                                 {currentFontStyle.fontSize}px

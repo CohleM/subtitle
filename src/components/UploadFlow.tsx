@@ -181,35 +181,14 @@ export const UploadFlow: React.FC<{
                                     `}
                                 >
                                     {/* Preview Placeholder */}
-                                    <div className={`
-                                        absolute inset-0 flex flex-col items-center justify-center 
-                                        bg-gradient-to-br transition-colors duration-200
-                                        ${isSelected
-                                            ? 'from-gray-100 to-gray-200'
-                                            : 'from-gray-100 to-gray-300 group-hover:from-gray-200 group-hover:to-gray-300'
-                                        }
-                                    `}>
-                                        {/* Mock Caption Preview */}
-                                        <div className="space-y-1 px-3 w-full">
-                                            <div className={`
-                                                h-1.5 rounded-full mx-auto transition-all
-                                                ${isSelected ? 'bg-black w-3/4' : 'bg-gray-400 w-2/3'}
-                                            `} />
-                                            <div className={`
-                                                h-2 rounded-full mx-auto transition-all
-                                                ${isSelected ? 'bg-black w-1/2' : 'bg-gray-500 w-1/2'}
-                                            `} />
-                                            <div className={`
-                                                h-1.5 rounded-full mx-auto transition-all
-                                                ${isSelected ? 'bg-gray-600 w-2/3' : 'bg-gray-400 w-3/5'}
-                                            `} />
-                                        </div>
-                                        <span className={`
-                                            mt-2 text-[9px] font-bold uppercase tracking-wider transition-colors
-                                            ${isSelected ? 'text-black' : 'text-gray-600'}
-                                        `}>
-                                            {style.name}
-                                        </span>
+                                    {/* Preview */}
+                                    <div className="absolute inset-0 bg-gray-200">
+                                        <img
+                                            src={isHovered ? `/previews/${style.id}.gif` : `/previews/png/${style.id}.png`}
+                                            alt={style.name}
+                                            className="w-full h-full object-cover"
+                                        />
+
                                     </div>
 
                                     {/* Badges */}
@@ -238,6 +217,12 @@ export const UploadFlow: React.FC<{
                                         <div className="absolute inset-0 bg-black/5 transition-colors" />
                                     )}
                                 </button>
+                                <p className={`
+        mt-1.5 text-[10px] font-bold text-center uppercase tracking-wider truncate
+        ${isSelected ? 'text-black' : 'text-gray-500'}
+    `}>
+                                    {style.name}
+                                </p>
                             </div>
                         );
                     })}

@@ -1,65 +1,215 @@
 // src/components/Hero.tsx
 'use client'
 
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 
+const styles = [
+    {
+        id: 'gradient',
+        name: 'Gradient base',
+        description: 'Vibrant gradient backgrounds with bold typography',
+        video: '/landing-page-videos/GB.mp4',
+    },
+    {
+        id: 'minimal',
+        name: 'Minimal clean',
+        description: 'Clean, minimal design with subtle shadows',
+        video: '/landing-page-videos/Combo.mp4',
+    },
+    {
+        id: 'dynamic',
+        name: 'Dynamic pop',
+        description: 'High energy with dynamic animations',
+        video: '/landing-page-videos/GlowI.mp4',
+    },
+]
+
 export function Hero() {
+    const [activeIndex, setActiveIndex] = useState(0)
+    const [isTransitioning, setIsTransitioning] = useState(false)
+    const videoRef = useRef<HTMLVideoElement>(null)
+    const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+    useEffect(() => {
+        // Auto-rotate every 7 seconds
+        intervalRef.current = setInterval(() => {
+            setIsTransitioning(true)
+            setTimeout(() => {
+                setActiveIndex((prev) => (prev + 1) % styles.length)
+                setIsTransitioning(false)
+            }, 300)
+        }, 7000)
+
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current)
+        }
+    }, [])
+
+    useEffect(() => {
+        // Play video when active index changes
+        if (videoRef.current) {
+            videoRef.current.load()
+            videoRef.current.play().catch(() => {
+                // Auto-play might be blocked, that's okay
+            })
+        }
+    }, [activeIndex])
+
+    const handleStyleClick = (index: number) => {
+        if (index === activeIndex) return
+
+        if (intervalRef.current) clearInterval(intervalRef.current)
+        setIsTransitioning(true)
+        setTimeout(() => {
+            setActiveIndex(index)
+            setIsTransitioning(false)
+        }, 300)
+
+        // Restart auto-rotation
+        intervalRef.current = setInterval(() => {
+            setIsTransitioning(true)
+            setTimeout(() => {
+                setActiveIndex((prev) => (prev + 1) % styles.length)
+                setIsTransitioning(false)
+            }, 300)
+        }, 7000)
+    }
+
+    const activeStyle = styles[activeIndex]
+
     return (
-        <section className="pt-32 pb-20 px-6 bg-[var(--color-bg)]">
-            <div className="max-w-4xl mx-auto text-center">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-secondary)] rounded-full border border-[var(--color-border)] mb-8">
-                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                    <span className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
-                        Now with AI-powered styling
-                    </span>
+        <section className="pt-32 pb-20 px-6 bg-[var(--color-bg)] min-h-screen">
+            <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-secondary)] rounded-full border border-[var(--color-border)]">
+                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <span className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+                            Now with AI-powered styling
+                        </span>
+                    </div>
+
+                    <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-[var(--color-text)] mb-6 leading-[1.1]">
+                        Stunning subtitles
+                        <br />
+                        <span className="text-[var(--color-text-light)]">in seconds</span>
+                    </h1>
+
+                    <p className="text-lg md:text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto mb-10 leading-relaxed">
+                        Professional, animated captions that make your videos stand out.
+                        No editing skills required—just upload and let AI do the magic.
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <Link
+                            href="/editor"
+                            className="w-full sm:w-auto px-8 py-4 bg-[var(--color-primary)] text-[var(--color-bg)] text-sm font-semibold uppercase tracking-wider rounded-2xl hover:bg-[var(--color-primary-hover)] active:scale-[0.98] transition-all"
+                        >
+                            Start creating free
+                        </Link>
+                        <button
+                            onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
+                            className="w-full sm:w-auto px-8 py-4 bg-[var(--color-bg-card)] text-[var(--color-text)] text-sm font-semibold uppercase tracking-wider rounded-2xl border border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] active:scale-[0.98] transition-all"
+                        >
+                            See demo
+                        </button>
+                    </div>
                 </div>
 
-                <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-[var(--color-text)] mb-6 leading-[1.1]">
-                    Stunning subtitles
-                    <br />
-                    <span className="text-[var(--color-text-light)]">in seconds</span>
-                </h1>
+                {/* Video Player + Styles Grid */}
+                <div className="grid lg:grid-cols-2  items-start my-32"> {/* Reduced gap from gap-8 to gap-4 */}
+                    {/* Left: Video Player */}
+                    <div className="relative "> {/* Added vertical margins */}
+                        <div className="relative bg-[var(--color-bg-secondary)] rounded-3xl border border-[var(--color-border)] overflow-hidden shadow-2xl mx-auto"
+                            style={{ height: 'calc(100vh - 220px)', aspectRatio: '9/16', maxWidth: '100%' }}>
+                            {/* Video */}
+                            <video
+                                ref={videoRef}
+                                key={activeStyle.video}
+                                src={activeStyle.video}
+                                autoPlay
+                                muted
+                                loop
+                                playsInline
+                                className={`w-full h-full object-cover transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
+                            />
 
-                <p className="text-lg md:text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto mb-10 leading-relaxed">
-                    Professional, animated captions that make your videos stand out.
-                    No editing skills required—just upload and let AI do the magic.
-                </p>
+                            {/* Overlay gradient */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none"></div>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Link
-                        href="/editor"
-                        className="w-full sm:w-auto px-8 py-4 bg-[var(--color-primary)] text-[var(--color-bg)] text-sm font-semibold uppercase tracking-wider rounded-2xl hover:bg-[var(--color-primary-hover)] active:scale-[0.98] transition-all"
-                    >
-                        Start creating free
-                    </Link>
-                    <button
-                        onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
-                        className="w-full sm:w-auto px-8 py-4 bg-[var(--color-bg-card)] text-[var(--color-text)] text-sm font-semibold uppercase tracking-wider rounded-2xl border border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] active:scale-[0.98] transition-all"
-                    >
-                        See demo
-                    </button>
-                </div>
+                            {/* Progress indicator */}
+                            <div className="absolute top-4 left-4 right-4 flex gap-2">
+                                {styles.map((_, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="h-1 flex-1 rounded-full bg-white/20 overflow-hidden"
+                                    >
+                                        <div
+                                            className={`h-full bg-white rounded-full transition-all duration-100 ${idx === activeIndex ? 'w-full' : idx < activeIndex ? 'w-full' : 'w-0'}`}
+                                            style={{
+                                                transitionDuration: idx === activeIndex ? '7000ms' : '300ms',
+                                                transitionTimingFunction: idx === activeIndex ? 'linear' : 'ease-out',
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
 
-                <div className="mt-16 relative">
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg)] via-transparent to-transparent z-10 pointer-events-none h-32 bottom-0"></div>
-                    <div className="relative bg-[var(--color-bg-secondary)] rounded-3xl border border-[var(--color-border)] overflow-hidden aspect-video max-w-4xl mx-auto shadow-2xl">
-                        <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-bg-secondary)]">
-                            <div className="text-center">
-                                <div className="w-20 h-20 bg-[var(--color-primary)] rounded-2xl mx-auto mb-4 flex items-center justify-center">
-                                    <svg className="w-8 h-8 text-[var(--color-bg)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                            {/* Style badge */}
+                            <div className="absolute bottom-4 left-4">
+                                <div className="px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full">
+                                    <span className="text-xs font-medium text-white">
+                                        {activeStyle.name}
+                                    </span>
                                 </div>
-                                <p className="text-sm text-[var(--color-text-light)] font-medium">Video preview</p>
                             </div>
                         </div>
-                        {/* Mock subtitle overlay */}
-                        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 bg-[var(--color-primary)]/90 px-6 py-3 rounded-xl">
-                            <p className="text-[var(--color-bg)] text-lg font-bold tracking-wide">
-                                This is how your subtitles will look ✨
-                            </p>
-                        </div>
+                    </div>
+
+                    {/* Right: Style Cards */}
+                    <div className="flex flex-col gap-4 lg:pt-12">
+                        {styles.map((style, index) => {
+                            const isActive = index === activeIndex
+                            return (
+                                <button
+                                    key={style.id}
+                                    onClick={() => handleStyleClick(index)}
+                                    className={`group relative w-full text-left p-6 rounded-2xl border transition-all duration-300 ${isActive
+                                        ? 'bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-hover)] border-[var(--color-primary)] scale-[1.02] shadow-lg shadow-[var(--color-primary)]/20'
+                                        : 'bg-[var(--color-bg-card)] border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] hover:border-[var(--color-border-hover)]'
+                                        }`}
+                                >
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <h3 className={`text-lg font-bold mb-1 ${isActive ? 'text-white' : 'text-[var(--color-text)]'}`}>
+                                                {style.name}
+                                            </h3>
+                                            <p className={`text-sm ${isActive ? 'text-white/80' : 'text-[var(--color-text-muted)]'}`}>
+                                                {style.description}
+                                            </p>
+                                        </div>
+
+                                        {/* Active indicator */}
+                                        <div className={`w-3 h-3 rounded-full transition-all duration-300 ${isActive ? 'bg-white scale-100' : 'bg-[var(--color-border)] scale-75'}`}>
+                                            {isActive && (
+                                                <div className="w-full h-full rounded-full bg-white animate-ping opacity-75"></div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Active state glow */}
+                                    {isActive && (
+                                        <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-hover)] opacity-20 blur-xl -z-10"></div>
+                                    )}
+                                </button>
+                            )
+                        })}
+
+                        {/* Helper text */}
+                        <p className="text-center text-sm text-[var(--color-text-muted)] mt-4">
+                            Click a style to preview, or wait for auto-rotation
+                        </p>
                     </div>
                 </div>
             </div>

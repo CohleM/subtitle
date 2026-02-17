@@ -71,19 +71,19 @@ export const StyleSelector: React.FC<{
                         return (
                             <div
                                 key={style.id}
-                                className="relative aspect-video"
+                                className="relative"
                                 onMouseEnter={() => setHoveredStyle(style.id)}
                                 onMouseLeave={() => setHoveredStyle(null)}
                             >
                                 {/* Main Card Button */}
                                 <button
                                     onClick={() => onStyleSelect(style.id)}
-                                    className={`w-full h-full relative group bg-gray-200 rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] ${selected
+                                    className={`w-full aspect-video relative group bg-gray-200 rounded-2xl overflow-hidden border-2 transition-all hover:scale-[1.02] ${selected
                                         ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)] ring-offset-2'
                                         : 'border-transparent hover:border-[var(--color-border)]'
                                         }`}
                                 >
-                                    {/* Preview Placeholder */}
+                                    {/* Preview */}
                                     <div className="absolute inset-0 bg-gray-200">
                                         <img
                                             src={isHovered ? `/previews/${style.id}.gif` : `/previews/png/${style.id}.png`}
@@ -123,7 +123,7 @@ export const StyleSelector: React.FC<{
                                             e.stopPropagation();
                                             onEditStyle(style.id);
                                         }}
-                                        className="absolute inset-0 bg-black/60 backdrop-blur-[2px] rounded-2xl flex flex-col items-center justify-center gap-2 transition-all cursor-pointer z-10"
+                                        className="absolute top-0 left-0 right-0 bottom-[24px] bg-black/60 backdrop-blur-[2px] rounded-2xl flex flex-col items-center justify-center gap-2 transition-all cursor-pointer z-10"
                                     >
                                         <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform">
                                             <Pencil className="w-5 h-5 text-black" />
@@ -133,6 +133,12 @@ export const StyleSelector: React.FC<{
                                         </span>
                                     </button>
                                 )}
+
+                                {/* Name */}
+                                <p className={`mt-1.5 text-[10px] font-bold text-center uppercase tracking-wider truncate
+        ${selected ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-muted)]'}`}>
+                                    {style.name}
+                                </p>
                             </div>
                         );
                     })}
