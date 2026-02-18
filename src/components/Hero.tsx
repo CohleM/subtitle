@@ -103,17 +103,17 @@ export function Hero() {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link
-                            href="/editor"
+                            href="/authentication"
                             className="w-full sm:w-auto px-8 py-4 bg-[var(--color-primary)] text-[var(--color-bg)] text-sm font-semibold uppercase tracking-wider rounded-2xl hover:bg-[var(--color-primary-hover)] active:scale-[0.98] transition-all"
                         >
                             Start creating free
                         </Link>
-                        <button
+                        {/* <button
                             onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
                             className="w-full sm:w-auto px-8 py-4 bg-[var(--color-bg-card)] text-[var(--color-text)] text-sm font-semibold uppercase tracking-wider rounded-2xl border border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] active:scale-[0.98] transition-all"
                         >
                             See demo
-                        </button>
+                        </button> */}
                     </div>
                 </div>
 

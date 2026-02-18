@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../components/DashboardNavbar';
-import { Upload, Video, Pencil, Eye, Loader2 } from 'lucide-react';
+import { Upload, Video, Pencil, Eye, Loader2, Zap } from 'lucide-react';
 import useLocalStorage from 'use-local-storage';
 
 type UploadState = 'idle' | 'uploading' | 'success' | 'error';
@@ -13,14 +13,24 @@ interface Project {
     original_url: string | null;
     low_res_url: string | null;
     status: string;           // uploaded | processing | ready | error
-    progress: number;         // 0-100  ← new field
-    current_step: string;     // "downloading" | "transcribing" etc. ← new field
+    progress: number;         // 0-100
+    current_step: string;     // "downloading" | "transcribing" etc.
     created_at: string;
     updated_at: string;
     current_style?: any;
     style_id?: number;
     transcript?: any;
     render_job_id?: any;
+}
+
+interface UserInfo {
+    id: number;
+    email: string;
+    name: string | null;
+    picture: string | null;
+    credits: number;
+    subscription: string;
+    created_at: string;
 }
 
 // Human-readable labels for each pipeline step
@@ -53,8 +63,34 @@ export default function DashboardPage() {
     const [isLoadingProjects, setIsLoadingProjects] = useState(true);
     const [projectsError, setProjectsError] = useState<string | null>(null);
 
-    // Polling interval ref — so we can clear it when no longer needed
+    // User info state
+    const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+    const [isLoadingUser, setIsLoadingUser] = useState(true);
+
+    // Polling interval ref
     const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    // ─── Fetch user info (credits, subscription) ──────────────────────────────
+    const fetchUserInfo = useCallback(async () => {
+        try {
+            const response = await fetch(`${apiUrl}/users/me`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch user info');
+
+            const data: UserInfo = await response.json();
+            setUserInfo(data);
+        } catch (err) {
+            console.error('Error fetching user info:', err);
+        } finally {
+            setIsLoadingUser(false);
+        }
+    }, [accessToken, apiUrl]);
 
     // ─── Check if any project is currently processing ───────────────────────
     const hasProcessingVideos = (list: Project[]) =>
@@ -91,16 +127,13 @@ export default function DashboardPage() {
     }, [accessToken, apiUrl]);
 
     // ─── Polling logic ───────────────────────────────────────────────────────
-    // Starts polling every 3s while any video is processing.
-    // Stops automatically once all are done.
     const startPolling = useCallback(() => {
-        if (pollIntervalRef.current) return; // already polling
+        if (pollIntervalRef.current) return;
 
         pollIntervalRef.current = setInterval(async () => {
-            const updated = await fetchProjects(false); // silent refresh, no spinner
+            const updated = await fetchProjects(false);
 
             if (updated && !hasProcessingVideos(updated)) {
-                // All done — stop polling
                 clearInterval(pollIntervalRef.current!);
                 pollIntervalRef.current = null;
             }
@@ -118,13 +151,16 @@ export default function DashboardPage() {
     useEffect(() => {
         if (!accessToken) return;
 
+        // Fetch both user info and projects
+        fetchUserInfo();
+
         fetchProjects(true).then((data) => {
             if (data && hasProcessingVideos(data)) {
                 startPolling();
             }
         });
 
-        return () => stopPolling(); // cleanup on unmount
+        return () => stopPolling();
     }, [accessToken]);
 
     // If a new project comes in that's processing, make sure polling is running
@@ -169,6 +205,9 @@ export default function DashboardPage() {
             setUploadProgress(100);
             setUploadState('success');
 
+            // Refresh user info to update credits after upload
+            fetchUserInfo();
+
             setTimeout(() => {
                 router.push(
                     `/style-selection?videoId=${encodeURIComponent(data.video_id)}&originalUrl=${encodeURIComponent(data.original_url)}&filename=${encodeURIComponent(data.name)}&userId=${encodeURIComponent(data.user_id)}`
@@ -207,13 +246,11 @@ export default function DashboardPage() {
         const created = new Date(project.created_at).getTime();
         const updated = project.updated_at ? new Date(project.updated_at).getTime() : 0;
 
-        // Return the more recent timestamp
         if (updated > created) {
             return { time: project.updated_at, label: 'updated' };
         }
         return { time: project.created_at, label: 'created' };
     };
-
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
     const getRelativeTime = (dateString: string) => {
@@ -255,6 +292,7 @@ export default function DashboardPage() {
         <div className="h-screen w-full bg-white flex overflow-hidden">
             {/* Sidebar */}
             <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0">
+                {/* Logo */}
                 <div className="p-6">
                     <div className="flex items-center gap-3">
                         <div className="w-7 h-7 bg-black rounded-xl flex items-center justify-center">
@@ -263,20 +301,54 @@ export default function DashboardPage() {
                         <span className="font-medium text-gray-900 tracking-wide text-sm uppercase">Submagic</span>
                     </div>
                 </div>
+
+                {/* Main Navigation - Top */}
                 <nav className="flex-1 px-4 space-y-1">
-                    <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-900 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-[var(--color-text-muted)] bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <svg className="w-5 h-5 stroke-[var(--color-primary)]" fill="none" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                         </svg>
                         Home
                     </button>
-                    <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                </nav>
+
+                {/* Bottom Section - Credits, Subscription, Upgrade */}
+                <div className="p-4 border-t border-gray-100 space-y-3">
+                    {/* Credits Display */}
+                    <div className="px-3 py-2 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Zap className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                            <span className="text-xs font-semibold text-gray-700">Credits</span>
+                        </div>
+                        <p className="text-sm font-bold text-[var(--color-text-muted)]">
+                            {isLoadingUser ? (
+                                <span className="text-gray-400">Loading...</span>
+                            ) : (
+                                <>{userInfo?.credits ?? 0} remaining</>
+                            )}
+                        </p>
+                    </div>
+
+                    {/* Subscription Badge */}
+                    {!isLoadingUser && userInfo?.subscription && (
+                        <div className="px-3 py-1.5">
+                            <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">
+                                Subscription: <span className="text-gray-700">{userInfo.subscription}</span>
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Upgrade Button */}
+                    <button
+                        className="w-full flex items-center gap-3 px-3 py-2.5 bg-[var(--color-primary)] text-sm font-medium text-white rounded-lg hover:bg-[var(--color-text-light)] transition-colors border border-gray-200 hover:border-gray-300"
+                        onClick={() => router.push("/pricing")}
+                    >
+                        <svg className="w-5 h-5 stroke-[var(--color-primary)]" fill="none" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                         Upgrade
                     </button>
-                </nav>
+                </div>
             </aside>
 
             {/* Main */}
@@ -306,7 +378,7 @@ export default function DashboardPage() {
 
                                 {uploadState === 'idle' && (
                                     <div className="flex flex-col items-center gap-3 text-center p-6">
-                                        <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+                                        <div className="w-10 h-10 bg-[var(--color-primary)] rounded-lg flex items-center justify-center">
                                             <Upload className="w-5 h-5 text-white" />
                                         </div>
                                         <div>
@@ -344,7 +416,6 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-base font-semibold text-gray-900">Recent Projects</h2>
-                                    {/* Live indicator — shows when polling is active */}
                                     {pollIntervalRef.current && (
                                         <span className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
                                             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
@@ -381,7 +452,7 @@ export default function DashboardPage() {
                                         .sort((a, b) => {
                                             const aDate = new Date(a.updated_at || a.created_at).getTime();
                                             const bDate = new Date(b.updated_at || b.created_at).getTime();
-                                            return bDate - aDate; // newest first
+                                            return bDate - aDate;
                                         })
                                         .map((project) => {
                                             const processing = isProcessing(project);
@@ -392,12 +463,12 @@ export default function DashboardPage() {
                                                     key={project.id}
                                                     onClick={() => handleCardClick(project)}
                                                     className={`
-            bg-white rounded-lg border overflow-hidden transition-all duration-200 group
-            ${clickable
+                                                        bg-white rounded-lg border overflow-hidden transition-all duration-200 group
+                                                        ${clickable
                                                             ? 'border-gray-200 hover:shadow-sm cursor-pointer'
                                                             : 'border-gray-100 cursor-not-allowed opacity-80'
                                                         }
-          `}
+                                                    `}
                                                 >
                                                     {/* Thumbnail */}
                                                     <div className="aspect-video bg-gray-100 relative overflow-hidden">
@@ -411,14 +482,13 @@ export default function DashboardPage() {
                                                             </div>
                                                         )}
 
-                                                        {/* ── Processing overlay ── */}
+                                                        {/* Processing overlay */}
                                                         {processing && (
                                                             <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 px-4">
                                                                 <Loader2 className="w-5 h-5 text-white animate-spin" />
                                                                 <p className="text-[10px] text-white/90 font-medium text-center leading-tight">
                                                                     {getStepLabel(project.current_step)}
                                                                 </p>
-                                                                {/* Progress bar */}
                                                                 <div className="w-full h-0.5 bg-white/20 rounded-full overflow-hidden">
                                                                     <div
                                                                         className="h-full bg-white rounded-full transition-all duration-700 ease-out"
@@ -431,7 +501,7 @@ export default function DashboardPage() {
                                                             </div>
                                                         )}
 
-                                                        {/* ── Status badges (non-processing) ── */}
+                                                        {/* Status badges */}
                                                         {project.status === 'error' && (
                                                             <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-red-500/90 backdrop-blur-sm rounded text-[9px] font-medium text-white uppercase tracking-wider">
                                                                 Error
@@ -443,7 +513,7 @@ export default function DashboardPage() {
                                                             </div>
                                                         )}
 
-                                                        {/* ── Hover actions — only when ready ── */}
+                                                        {/* Hover actions */}
                                                         {clickable && (
                                                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
                                                                 <button

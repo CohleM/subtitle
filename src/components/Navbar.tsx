@@ -28,13 +28,13 @@ export function Navbar() {
 
                 <div className="flex items-center gap-4">
                     <Link
-                        href="/login"
+                        href="/authentication"
                         className="hidden md:block text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
                     >
                         Log in
                     </Link>
                     <Link
-                        href="/editor"
+                        href="/authentication"
                         className="px-5 py-2.5 bg-[var(--color-primary)] text-[var(--color-bg)] text-sm font-medium rounded-xl hover:bg-[var(--color-primary-hover)] active:scale-[0.98] transition-all"
                     >
                         Try for free
