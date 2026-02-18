@@ -8,19 +8,19 @@ const styles = [
     {
         id: 'gradient',
         name: 'Gradient base',
-        description: 'Vibrant gradient backgrounds with bold typography',
+        description: 'Eye-catching gradient text with bold typography that pops off the screen',
         video: '/landing-page-videos/GB.mp4',
     },
     {
-        id: 'minimal',
-        name: 'Minimal clean',
-        description: 'Clean, minimal design with subtle shadows',
+        id: 'Combo',
+        name: 'Combo',
+        description: 'Dynamic multi-style captions that add visual rhythm to your content',
         video: '/landing-page-videos/Combo.mp4',
     },
     {
-        id: 'dynamic',
-        name: 'Dynamic pop',
-        description: 'High energy with dynamic animations',
+        id: 'Glow',
+        name: 'Glow',
+        description: 'Elegant italic text with a subtle glow for a premium, cinematic feel',
         video: '/landing-page-videos/GlowI.mp4',
     },
 ]
@@ -122,7 +122,7 @@ export function Hero() {
                     {/* Left: Video Player */}
                     <div className="relative "> {/* Added vertical margins */}
                         <div className="relative bg-[var(--color-bg-secondary)] rounded-3xl border border-[var(--color-border)] overflow-hidden shadow-2xl mx-auto"
-                            style={{ height: 'calc(100vh - 220px)', aspectRatio: '9/16', maxWidth: '100%' }}>
+                            style={{ height: 'calc(100vh - 180px)', aspectRatio: '9/16', maxWidth: '100%' }}>
                             {/* Video */}
                             <video
                                 ref={videoRef}
@@ -168,7 +168,7 @@ export function Hero() {
                     </div>
 
                     {/* Right: Style Cards */}
-                    <div className="flex flex-col gap-4 lg:pt-12">
+                    <div className="flex flex-col gap-4 lg:pt-12 mt-8">
                         {styles.map((style, index) => {
                             const isActive = index === activeIndex
                             return (
@@ -206,10 +206,21 @@ export function Hero() {
                             )
                         })}
 
+                        {/* "Many more" indicator */}
+                        <div className="relative mt-2">
+                            <div className="flex items-center justify-center gap-3">
+                                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[var(--color-border)] to-transparent"></div>
+                                <span className="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+                                    And many more
+                                </span>
+                                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[var(--color-border)] to-transparent"></div>
+                            </div>
+                        </div>
+
                         {/* Helper text */}
-                        <p className="text-center text-sm text-[var(--color-text-muted)] mt-4">
+                        {/* <p className="text-center text-sm text-[var(--color-text-muted)] mt-4">
                             Click a style to preview, or wait for auto-rotation
-                        </p>
+                        </p> */}
                     </div>
                 </div>
             </div>

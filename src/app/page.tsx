@@ -3,9 +3,8 @@ import { Navbar } from '@/components/Navbar'
 import { Hero } from '@/components/Hero'
 import { Features } from '@/components/Features'
 import { HowItWorks } from '@/components/HowItWorks'
-import { Pricing } from '@/components/Pricing'
+import { Pricing } from '@/components/Pricing' // Import from components
 import { Footer } from '@/components/Footer'
-// import { ThemeDebugger } from '@/components/ThemeDebugger'
 
 export default function Home() {
   return (
@@ -14,9 +13,8 @@ export default function Home() {
       <Hero />
       <Features />
       <HowItWorks />
-      <Pricing />
+      <Pricing isLandingPage={true} />
       <Footer />
-      {/* <ThemeDebugger /> */}
     </main>
   )
 }

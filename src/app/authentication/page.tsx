@@ -57,7 +57,7 @@ export default function Login() {
                         Create stunning videos
                     </h2>
                     <p className="text-[var(--color-text-muted)]">
-                        Edit transcripts, sync with Remotion, and export in minutes.
+                        Edit transcripts, add stunning styles, and export in minutes.
                     </p>
                 </div>
             </div>

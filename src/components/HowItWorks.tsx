@@ -3,7 +3,7 @@ const steps = [
     {
         number: '01',
         title: 'Upload your video',
-        description: 'Drop any video file or paste a YouTube link. We support all major formats up to 4K.'
+        description: 'Drop any video file. We support all major sizes i.e landscape, portrait videos up to 1080p'
     },
     {
         number: '02',
@@ -18,7 +18,7 @@ const steps = [
     {
         number: '04',
         title: 'Export',
-        description: 'Download your video with baked-in subtitles or export as SRT/VTT for flexibility.'
+        description: 'Download your video with baked-in subtitles in seconds.'
     }
 ]
 

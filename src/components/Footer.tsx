@@ -4,8 +4,8 @@ import Link from 'next/link'
 const links = {
     Product: ['Features', 'Pricing', 'Changelog', 'Roadmap'],
     Company: ['About', 'Blog', 'Careers', 'Contact'],
-    Resources: ['Documentation', 'Help Center', 'API Reference', 'Status'],
-    Legal: ['Privacy', 'Terms', 'Security']
+    // Resources: ['Documentation', 'Help Center', 'API Reference', 'Status'],
+    Legal: ['Privacy', 'Terms',]
 }
 
 export function Footer() {

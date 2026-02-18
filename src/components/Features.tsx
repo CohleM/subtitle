@@ -1,5 +1,5 @@
 // src/components/Features.tsx
-import { Zap, Palette, Globe, Sparkles } from 'lucide-react'
+import { Zap, Palette, Sparkles, Edit3 } from 'lucide-react'
 
 const features = [
     {
@@ -13,9 +13,9 @@ const features = [
         description: 'Choose from 10+ professionally designed caption styles. Customize colors, fonts, and animations.'
     },
     {
-        icon: Globe,
-        title: '48 languages',
-        description: 'Automatic transcription and translation. Reach global audiences effortlessly.'
+        icon: Edit3, // or Sliders
+        title: 'Precise editing',
+        description: 'Fine-tune timing, and adjust positioning with our intuitive editor.'
     },
     {
         icon: Sparkles,
