@@ -162,6 +162,7 @@ export default function DashboardPage() {
 
             const data: Project[] = await response.json();
             setProjects(data);
+            console.log('yoooo', data)
             return data;
         } catch (err) {
             console.error('Error fetching projects:', err);
