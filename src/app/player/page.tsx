@@ -15,6 +15,7 @@ import { useSearchParams } from "next/navigation";
 import useLocalStorage from 'use-local-storage';
 import { AlertCircle, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { notFound } from "next/navigation";
 import { StyleChangeDialog } from '../../components/StyleChangeDialogue';
 
 type VideoInfo = {
@@ -135,6 +136,13 @@ function PlayerPageContent() {
                         "Content-Type": "application/json"
                     }
                 });
+                if (!videoRes.ok) {
+                    if (videoRes.status === 404) {
+                        setStyleChangeError("404 Not Found");
+                        return;
+                    }
+                    throw new Error(`HTTP error ${videoRes.status}`);
+                }
                 const video = await videoRes.json();
 
                 const currentStyle = video.current_style;
@@ -498,6 +506,16 @@ function PlayerPageContent() {
             </div>
         );
     }
+
+    if (styleChangeError === "404 Not Found") {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-xl font-semibold">404 Not Found</div>
+            </div>
+        );
+    }
+
+
 
     return (
         <div className="h-screen w-full bg-white flex flex-col overflow-hidden">

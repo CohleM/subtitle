@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../components/DashboardNavbar';
-import { Upload, Video, Pencil, Eye, Loader2, Zap } from 'lucide-react';
+import { Upload, Video, Pencil, Eye, Loader2, Zap, AlertCircle } from 'lucide-react';
 import useLocalStorage from 'use-local-storage';
 
 type UploadState = 'idle' | 'uploading' | 'success' | 'error';
@@ -12,9 +12,9 @@ interface Project {
     name: string | null;
     original_url: string | null;
     low_res_url: string | null;
-    status: string;           // uploaded | processing | ready | error
-    progress: number;         // 0-100
-    current_step: string;     // "downloading" | "transcribing" etc.
+    status: string;
+    progress: number;
+    current_step: string;
     created_at: string;
     updated_at: string;
     current_style?: any;
@@ -33,7 +33,6 @@ interface UserInfo {
     created_at: string;
 }
 
-// Human-readable labels for each pipeline step
 const STEP_LABELS: Record<string, string> = {
     queued: 'Queued...',
     downloading: 'Downloading...',
@@ -48,6 +47,29 @@ function getStepLabel(step: string): string {
     return STEP_LABELS[step] ?? 'Processing...';
 }
 
+const getMaxDuration = (subscription: string | undefined): number => {
+    switch (subscription?.toLowerCase()) {
+        case 'ultra':
+            return 600;
+        case 'free':
+        case 'premium':
+        default:
+            return 120;
+    }
+};
+
+const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}m ${secs}s`;
+};
+
+// Calculate required credits (2 credits per minute, rounded up)
+const calculateRequiredCredits = (durationInSeconds: number): number => {
+    const durationInMinutes = durationInSeconds / 60;
+    return Math.ceil(durationInMinutes * 2);
+};
+
 export default function DashboardPage() {
     const router = useRouter();
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -55,7 +77,9 @@ export default function DashboardPage() {
     const [uploadState, setUploadState] = useState<UploadState>('idle');
     const [uploadProgress, setUploadProgress] = useState(0);
     const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [videoDuration, setVideoDuration] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [notification, setNotification] = useState<{ type: 'error' | 'warning'; message: string; action?: { label: string; onClick: () => void } } | null>(null);
 
     const [accessToken] = useLocalStorage("access_token", "");
 
@@ -63,14 +87,38 @@ export default function DashboardPage() {
     const [isLoadingProjects, setIsLoadingProjects] = useState(true);
     const [projectsError, setProjectsError] = useState<string | null>(null);
 
-    // User info state
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
     const [isLoadingUser, setIsLoadingUser] = useState(true);
 
-    // Polling interval ref
     const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    // ─── Fetch user info (credits, subscription) ──────────────────────────────
+    useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => {
+                setNotification(null);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
+
+    const getVideoDuration = (file: File): Promise<number> => {
+        return new Promise((resolve, reject) => {
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+
+            video.onloadedmetadata = () => {
+                window.URL.revokeObjectURL(video.src);
+                resolve(video.duration);
+            };
+
+            video.onerror = () => {
+                reject(new Error('Failed to load video metadata'));
+            };
+
+            video.src = window.URL.createObjectURL(file);
+        });
+    };
+
     const fetchUserInfo = useCallback(async () => {
         try {
             const response = await fetch(`${apiUrl}/users/me`, {
@@ -92,11 +140,9 @@ export default function DashboardPage() {
         }
     }, [accessToken, apiUrl]);
 
-    // ─── Check if any project is currently processing ───────────────────────
     const hasProcessingVideos = (list: Project[]) =>
         list.some((p) => p.status === 'processing');
 
-    // ─── Fetch all projects ──────────────────────────────────────────────────
     const fetchProjects = useCallback(async (showLoadingSpinner = true) => {
         try {
             if (showLoadingSpinner) {
@@ -126,7 +172,6 @@ export default function DashboardPage() {
         }
     }, [accessToken, apiUrl]);
 
-    // ─── Polling logic ───────────────────────────────────────────────────────
     const startPolling = useCallback(() => {
         if (pollIntervalRef.current) return;
 
@@ -147,11 +192,9 @@ export default function DashboardPage() {
         }
     }, []);
 
-    // Initial fetch on mount
     useEffect(() => {
         if (!accessToken) return;
 
-        // Fetch both user info and projects
         fetchUserInfo();
 
         fetchProjects(true).then((data) => {
@@ -163,15 +206,13 @@ export default function DashboardPage() {
         return () => stopPolling();
     }, [accessToken]);
 
-    // If a new project comes in that's processing, make sure polling is running
     useEffect(() => {
         if (hasProcessingVideos(projects)) {
             startPolling();
         }
     }, [projects]);
 
-    // ─── Upload ──────────────────────────────────────────────────────────────
-    const uploadToBackend = async (file: File) => {
+    const uploadToBackend = async (file: File, duration: number) => {
         try {
             setUploadState('uploading');
             setUploadProgress(5);
@@ -180,6 +221,7 @@ export default function DashboardPage() {
             const formData = new FormData();
             formData.append("file", file);
             formData.append("name", file.name);
+            formData.append("duration", duration.toString());
 
             const progressInterval = setInterval(() => {
                 setUploadProgress(prev => {
@@ -205,7 +247,6 @@ export default function DashboardPage() {
             setUploadProgress(100);
             setUploadState('success');
 
-            // Refresh user info to update credits after upload
             fetchUserInfo();
 
             setTimeout(() => {
@@ -214,33 +255,152 @@ export default function DashboardPage() {
                 );
             }, 500);
 
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             setUploadState('error');
-            setError("Upload failed. Please try again.");
+            setError(err.message || "Upload failed. Please try again.");
         }
+    };
+
+    const validateAndUpload = async (file: File, duration: number) => {
+        // Check 1: Duration limit based on subscription
+        const maxDuration = getMaxDuration(userInfo?.subscription);
+
+        if (duration > maxDuration) {
+            const maxMinutes = Math.floor(maxDuration / 60);
+            setNotification({
+                type: 'error',
+                message: `Video duration (${formatDuration(duration)}) exceeds your ${userInfo?.subscription || 'Free'} plan limit of ${maxMinutes} minutes.`,
+                action: {
+                    label: 'Upgrade to Ultra',
+                    onClick: () => router.push("/pricing")
+                }
+            });
+            return false;
+        }
+
+        // Check 2: Credits requirement (2 credits per minute)
+        const requiredCredits = calculateRequiredCredits(duration);
+        const availableCredits = userInfo?.credits ?? 0;
+
+        if (availableCredits < requiredCredits) {
+            const durationMinutes = (duration / 60).toFixed(1);
+            setNotification({
+                type: 'error',
+                message: `This ${durationMinutes} minute video requires ${requiredCredits} credits. You have ${availableCredits} credits available.`,
+                action: {
+                    label: 'Buy Credits',
+                    onClick: () => router.push("/pricing")
+                }
+            });
+            return false;
+        }
+
+        return true;
     };
 
     const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !file.type.startsWith('video/')) return;
-        setVideoFile(file);
-        await uploadToBackend(file);
-    }, []);
 
-    const handleDrop = useCallback((e: React.DragEvent) => {
+        if (!userInfo && !isLoadingUser) {
+            setNotification({
+                type: 'error',
+                message: "Unable to verify subscription. Please refresh the page."
+            });
+            return;
+        }
+
+        if (isLoadingUser) {
+            setNotification({
+                type: 'warning',
+                message: "Loading user info... Please wait."
+            });
+            return;
+        }
+
+        setVideoFile(file);
+
+        try {
+            const duration = await getVideoDuration(file);
+            setVideoDuration(duration);
+
+            const isValid = await validateAndUpload(file, duration);
+
+            if (!isValid) {
+                // Reset file input
+                setVideoFile(null);
+                setVideoDuration(null);
+                const input = document.getElementById('video-upload') as HTMLInputElement;
+                if (input) input.value = '';
+                return;
+            }
+
+            await uploadToBackend(file, duration);
+        } catch (err: any) {
+            setNotification({
+                type: 'error',
+                message: err.message || "Failed to process video. Please try again."
+            });
+            setVideoFile(null);
+            setVideoDuration(null);
+        }
+    }, [userInfo, isLoadingUser, router]);
+
+    const handleDrop = useCallback(async (e: React.DragEvent) => {
         e.preventDefault();
         const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('video/')) {
-            const input = document.getElementById('video-upload') as HTMLInputElement;
-            if (input) {
-                const dt = new DataTransfer();
-                dt.items.add(file);
-                input.files = dt.files;
-                input.dispatchEvent(new Event('change', { bubbles: true }));
-            }
+        if (!file || !file.type.startsWith('video/')) return;
+
+        if (!userInfo && !isLoadingUser) {
+            setNotification({
+                type: 'error',
+                message: "Unable to verify subscription. Please refresh the page."
+            });
+            return;
         }
-    }, []);
+
+        if (isLoadingUser) {
+            setNotification({
+                type: 'warning',
+                message: "Loading user info... Please wait."
+            });
+            return;
+        }
+
+        const input = document.getElementById('video-upload') as HTMLInputElement;
+        if (input) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+        }
+
+        setVideoFile(file);
+
+        try {
+            const duration = await getVideoDuration(file);
+            setVideoDuration(duration);
+
+            const isValid = await validateAndUpload(file, duration);
+
+            if (!isValid) {
+                // Reset file input
+                setVideoFile(null);
+                setVideoDuration(null);
+                if (input) input.value = '';
+                return;
+            }
+
+            await uploadToBackend(file, duration);
+        } catch (err: any) {
+            setNotification({
+                type: 'error',
+                message: err.message || "Failed to process video. Please try again."
+            });
+            setVideoFile(null);
+            setVideoDuration(null);
+        }
+    }, [userInfo, isLoadingUser, router]);
 
     const getDisplayTime = (project: Project) => {
         const created = new Date(project.created_at).getTime();
@@ -252,7 +412,6 @@ export default function DashboardPage() {
         return { time: project.created_at, label: 'created' };
     };
 
-    // ─── Helpers ─────────────────────────────────────────────────────────────
     const getRelativeTime = (dateString: string) => {
         const date = new Date(dateString);
         const now = new Date();
@@ -287,12 +446,40 @@ export default function DashboardPage() {
         router.push(`/player?videoId=${project.id}`);
     };
 
-    // ─── Render ──────────────────────────────────────────────────────────────
     return (
         <div className="h-screen w-full bg-white flex overflow-hidden">
+            {/* Notification Toast */}
+            {notification && (
+                <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 fade-in duration-200">
+                    <div className={`flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg border ${notification.type === 'error'
+                        ? 'bg-red-50 border-red-200 text-red-900'
+                        : 'bg-yellow-50 border-yellow-200 text-yellow-900'
+                        }`}>
+                        <AlertCircle className={`w-5 h-5 shrink-0 ${notification.type === 'error' ? 'text-red-500' : 'text-yellow-500'
+                            }`} />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{notification.message}</p>
+                            {notification.action && (
+                                <button
+                                    onClick={notification.action.onClick}
+                                    className="mt-2 text-sm font-semibold underline hover:no-underline"
+                                >
+                                    {notification.action.label}
+                                </button>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => setNotification(null)}
+                            className="text-gray-400 hover:text-gray-600"
+                        >
+                            ×
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Sidebar */}
             <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0">
-                {/* Logo */}
                 <div className="p-6">
                     <div className="flex items-center gap-3">
                         <div className="w-7 h-7 bg-black rounded-xl flex items-center justify-center">
@@ -302,7 +489,6 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Main Navigation - Top */}
                 <nav className="flex-1 px-4 space-y-1">
                     <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-[var(--color-text-muted)] bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                         <svg className="w-5 h-5 stroke-[var(--color-primary)]" fill="none" viewBox="0 0 24 24">
@@ -312,9 +498,7 @@ export default function DashboardPage() {
                     </button>
                 </nav>
 
-                {/* Bottom Section - Credits, Subscription, Upgrade */}
                 <div className="p-4 border-t border-gray-100 space-y-3">
-                    {/* Credits Display */}
                     <div className="px-3 py-2 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-2 mb-1">
                             <Zap className="w-4 h-4 text-yellow-500 fill-yellow-500" />
@@ -329,16 +513,17 @@ export default function DashboardPage() {
                         </p>
                     </div>
 
-                    {/* Subscription Badge */}
                     {!isLoadingUser && userInfo?.subscription && (
                         <div className="px-3 py-1.5">
                             <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">
                                 Subscription: <span className="text-gray-700">{userInfo.subscription}</span>
                             </span>
+                            <p className="text-[10px] text-gray-400 mt-0.5">
+                                Max {getMaxDuration(userInfo.subscription) / 60} min per video
+                            </p>
                         </div>
                     )}
 
-                    {/* Upgrade Button */}
                     <button
                         className="w-full flex items-center gap-3 px-3 py-2.5 bg-[var(--color-primary)] text-sm font-medium text-white rounded-lg hover:bg-[var(--color-text-light)] transition-colors border border-gray-200 hover:border-gray-300"
                         onClick={() => router.push("/pricing")}
@@ -351,14 +536,11 @@ export default function DashboardPage() {
                 </div>
             </aside>
 
-            {/* Main */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 <Navbar />
 
                 <main className="flex-1 overflow-y-auto bg-gray-50/30">
                     <div className="max-w-5xl mx-auto p-8 space-y-8">
-
-                        {/* Upload */}
                         <div className="space-y-3">
                             <h2 className="text-base font-semibold text-gray-900">Create New Project</h2>
                             <label
@@ -383,7 +565,24 @@ export default function DashboardPage() {
                                         </div>
                                         <div>
                                             <p className="text-xs font-medium text-gray-900 mb-0.5">Drop your video here or click to browse</p>
-                                            <p className="text-[11px] text-gray-500">MP4, MOV, WebM up to 2GB</p>
+                                            <p className="text-[11px] text-gray-500">
+                                                MP4, MOV, WebM up to 2GB
+                                                {userInfo && (
+                                                    <span className="ml-1">
+                                                        • Max {getMaxDuration(userInfo.subscription) / 60} min
+                                                    </span>
+                                                )}
+                                            </p>
+                                            {videoFile && videoDuration !== null && (
+                                                <p className="text-[11px] text-gray-600 mt-1">
+                                                    Selected: {videoFile.name} ({formatDuration(videoDuration)})
+                                                    {userInfo && (
+                                                        <span className="ml-1 text-gray-400">
+                                                            • Requires {calculateRequiredCredits(videoDuration)} credits
+                                                        </span>
+                                                    )}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -407,11 +606,14 @@ export default function DashboardPage() {
                                 )}
 
                                 {uploadState === 'success' && <p className="text-green-500 text-sm">Upload successful ✓ Redirecting...</p>}
-                                {uploadState === 'error' && <p className="text-red-500 text-sm">{error}</p>}
+                                {uploadState === 'error' && (
+                                    <div className="text-center px-6">
+                                        <p className="text-red-500 text-sm">{error}</p>
+                                    </div>
+                                )}
                             </label>
                         </div>
 
-                        {/* Projects */}
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -470,7 +672,6 @@ export default function DashboardPage() {
                                                         }
                                                     `}
                                                 >
-                                                    {/* Thumbnail */}
                                                     <div className="aspect-video bg-gray-100 relative overflow-hidden">
                                                         {project.low_res_url ? (
                                                             <video src={project.low_res_url} className="w-full h-full object-cover" muted playsInline />
@@ -482,7 +683,6 @@ export default function DashboardPage() {
                                                             </div>
                                                         )}
 
-                                                        {/* Processing overlay */}
                                                         {processing && (
                                                             <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 px-4">
                                                                 <Loader2 className="w-5 h-5 text-white animate-spin" />
@@ -501,7 +701,6 @@ export default function DashboardPage() {
                                                             </div>
                                                         )}
 
-                                                        {/* Status badges */}
                                                         {project.status === 'error' && (
                                                             <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-red-500/90 backdrop-blur-sm rounded text-[9px] font-medium text-white uppercase tracking-wider">
                                                                 Error
@@ -513,7 +712,6 @@ export default function DashboardPage() {
                                                             </div>
                                                         )}
 
-                                                        {/* Hover actions */}
                                                         {clickable && (
                                                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
                                                                 <button
@@ -536,7 +734,6 @@ export default function DashboardPage() {
                                                         )}
                                                     </div>
 
-                                                    {/* Card footer */}
                                                     <div className="p-3">
                                                         <h3 className="text-xs font-medium text-gray-900 mb-0.5 truncate">
                                                             {project.name || `Video ${project.id}`}
