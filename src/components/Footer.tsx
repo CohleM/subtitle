@@ -1,6 +1,6 @@
 // src/components/Footer.tsx
 import Link from 'next/link'
-
+import Image from 'next/image'
 const links = {
     Product: [
         { label: 'Features', href: '/#features' },
@@ -26,7 +26,13 @@ export function Footer() {
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
                     <div className="col-span-2">
                         <Link href="/" className="text-xl font-bold tracking-tight text-[var(--color-text)] mb-4 block">
-                            SubtitleAI
+                            <Image
+                                src="/logo.png"
+                                alt="SubtitleAI Logo"
+                                width={150}   // adjust to your logo size
+                                height={40}   // adjust proportionally
+                                priority
+                            />
                         </Link>
                         <p className="text-sm text-[var(--color-text-muted)] max-w-xs leading-relaxed">
                             Professional subtitles made simple. Create stunning captions for your videos in seconds.
@@ -56,7 +62,7 @@ export function Footer() {
 
                 <div className="pt-8 border-t border-[var(--color-border)] flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-xs text-[var(--color-text-light)]">
-                        © 2026 SubtitleAI. All rights reserved.
+                        © 2026 PrimeClip. All rights reserved.
                     </p>
                     <div className="flex items-center gap-6">
                         {/* <Link href="#" className="text-[var(--color-text-light)] hover:text-[var(--color-text)] transition-colors">

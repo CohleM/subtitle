@@ -15,7 +15,7 @@ import { useSearchParams } from "next/navigation";
 import useLocalStorage from 'use-local-storage';
 import { AlertCircle, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { notFound } from "next/navigation";
+
 import { StyleChangeDialog } from '../../components/StyleChangeDialogue';
 
 type VideoInfo = {
@@ -519,7 +519,8 @@ function PlayerPageContent() {
 
     return (
         <div className="h-screen w-full bg-white flex flex-col overflow-hidden">
-            <Navbar />
+            {/* <Navbar /> */}
+            <Navbar showLogo={true} />
 
             {/* Error Toast */}
             {styleChangeError && (

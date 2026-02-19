@@ -3,7 +3,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-
+import Image from "next/image";
 export function Navbar() {
     const [isOpen, setIsOpen] = useState(false)
 
@@ -11,7 +11,13 @@ export function Navbar() {
         <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--color-bg)]/80 backdrop-blur-md border-b border-[var(--color-border)]">
             <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
                 <Link href="/" className="text-xl font-bold tracking-tight text-[var(--color-text)]">
-                    SubtitleAI
+                    <Image
+                        src="/logo.png"
+                        alt="SubtitleAI Logo"
+                        width={150}   // adjust to your logo size
+                        height={40}   // adjust proportionally
+                        priority
+                    />
                 </Link>
 
                 <div className="hidden md:flex items-center gap-8">

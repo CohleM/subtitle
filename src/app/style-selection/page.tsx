@@ -108,7 +108,7 @@ function StyleSelectionContent() {
         return (
             <div className="h-screen w-full bg-white flex overflow-hidden">
                 {/* Left Sidebar */}
-                <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0">
+                {/* <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0">
                     <div className="p-6">
                         <div className="flex items-center gap-3">
                             <div className="w-7 h-7 bg-black rounded-xl flex items-center justify-center">
@@ -133,12 +133,12 @@ function StyleSelectionContent() {
                             Upgrade
                         </button>
                     </nav>
-                </aside>
+                </aside> */}
 
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col overflow-hidden">
                     {/* Navbar */}
-                    <Navbar />
+                    {/* <Navbar /> */}
 
                     {/* Generating State */}
                     <div className="flex-1 flex items-center justify-center bg-gray-50/30">
@@ -174,7 +174,7 @@ function StyleSelectionContent() {
     return (
         <div className="h-screen w-full bg-white flex overflow-hidden">
             {/* Left Sidebar */}
-            <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0">
+            {/* <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0">
                 <div className="p-6">
                     <div className="flex items-center gap-3">
                         <div className="w-7 h-7 bg-black rounded-xl flex items-center justify-center">
@@ -202,7 +202,7 @@ function StyleSelectionContent() {
                         Upgrade
                     </button>
                 </nav>
-            </aside>
+            </aside> */}
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">

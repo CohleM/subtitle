@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation';
 import { Navbar } from '../../components/DashboardNavbar';
 import { Upload, Video, Pencil, Eye, Loader2, Zap, AlertCircle } from 'lucide-react';
 import useLocalStorage from 'use-local-storage';
-
+import Link from 'next/link'
+import Image from 'next/image'
 type UploadState = 'idle' | 'uploading' | 'success' | 'error';
 
 interface Project {
@@ -483,10 +484,15 @@ export default function DashboardPage() {
             <aside className="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0">
                 <div className="p-6">
                     <div className="flex items-center gap-3">
-                        <div className="w-7 h-7 bg-black rounded-xl flex items-center justify-center">
-                            <span className="text-white font-bold text-xs">S</span>
-                        </div>
-                        <span className="font-medium text-gray-900 tracking-wide text-sm uppercase">Submagic</span>
+                        <Link href="/" className="text-xl font-bold tracking-tight text-[var(--color-text)] mb-4 block">
+                            <Image
+                                src="/logo.png"
+                                alt="SubtitleAI Logo"
+                                width={120}   // adjust to your logo size
+                                height={40}   // adjust proportionally
+                                priority
+                            />
+                        </Link>
                     </div>
                 </div>
 
@@ -590,7 +596,7 @@ export default function DashboardPage() {
 
                                 {uploadState === 'uploading' && (
                                     <div className="flex flex-col items-center gap-4 w-full max-w-xs px-6">
-                                        <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center animate-pulse">
+                                        <div className="w-10 h-10  rounded-lg flex items-center justify-center animate-pulse">
                                             <Video className="w-5 h-5 text-white" />
                                         </div>
                                         <div className="w-full space-y-1.5">

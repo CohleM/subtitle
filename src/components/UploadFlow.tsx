@@ -66,7 +66,7 @@ export const UploadFlow: React.FC<{
                                 </button>
                             )}
                             <div className="flex items-center gap-3">
-                                <div className="w-7 h-7 bg-black rounded-lg flex items-center justify-center">
+                                <div className="w-7 h-7 bg-[var(--color-primary)] rounded-lg flex items-center justify-center">
                                     <Sparkles className="w-3.5 h-3.5 text-white" />
                                 </div>
                                 <div>
@@ -84,7 +84,7 @@ export const UploadFlow: React.FC<{
                                 flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-medium uppercase tracking-wider
                                 transition-all duration-200
                                 ${selectedStyle
-                                    ? 'bg-black text-white hover:bg-gray-800'
+                                    ? 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-text-light)]'
                                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                 }
                             `}
@@ -118,14 +118,14 @@ export const UploadFlow: React.FC<{
                                     Ready to generate
                                 </p>
                             </div>
-                            {onCancel && (
+                            {/* {onCancel && (
                                 <button
                                     onClick={onCancel}
                                     className="text-[10px] font-medium text-gray-500 hover:text-black uppercase tracking-wider transition-colors"
                                 >
                                     Change
                                 </button>
-                            )}
+                            )} */}
                         </div>
                     </div>
                 </div>
@@ -143,7 +143,7 @@ export const UploadFlow: React.FC<{
                                     px-3 py-1 text-[10px] font-medium uppercase tracking-wider rounded-lg 
                                     transition-all whitespace-nowrap
                                     ${activeCategory === cat
-                                        ? 'bg-black text-white'
+                                        ? 'bg-[var(--color-primary)] text-white'
                                         : 'text-gray-500 hover:text-black hover:bg-gray-100'
                                     }
                                 `}
@@ -247,7 +247,7 @@ export const UploadFlow: React.FC<{
                             </div>
                             <button
                                 onClick={handleGenerate}
-                                className="flex items-center gap-2 px-4 py-1.5 bg-black text-white text-xs font-medium uppercase tracking-wider rounded-lg hover:bg-gray-800 transition-colors"
+                                className="flex items-center gap-2 px-4 py-1.5 bg-[var(--color-primary)] text-white text-xs font-medium uppercase tracking-wider rounded-lg hover:bg-[var(--color-text-light)] transition-colors"
                             >
                                 <Sparkles className="w-3.5 h-3.5" />
                                 Generate
