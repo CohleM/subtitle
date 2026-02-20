@@ -36,6 +36,7 @@ yarn-error.log*
 next-env.d.ts
 out/
 .env
+.env.prod
 build
 
 *.mp4
