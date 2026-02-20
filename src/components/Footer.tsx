@@ -9,13 +9,11 @@ const links = {
         { label: 'Demo', href: '/#hero' }
     ],
     Company: [
-        { label: 'About', href: '#' },
-        { label: 'Blog', href: '#' },
-        { label: 'Contact', href: '#' }
+        { label: 'Contact', href: '/contact' }
     ],
     Legal: [
-        { label: 'Privacy', href: '#' },
-        { label: 'Terms', href: '#' }
+        { label: 'Privacy', href: '/privacy' },
+        { label: 'Terms', href: '/terms' }
     ]
 }
 

@@ -540,6 +540,18 @@ export default function DashboardPage() {
                         </svg>
                         Upgrade
                     </button>
+                    <Link
+                        href="https://billing.stripe.com/p/login/9AQ9E39mZ9Ai0NO5kk"
+                        target="_blank"
+                    >
+                        <button
+                            className="w-full flex items-center gap-3 px-3 py-2.5 bg-white text-sm font-medium text-black rounded-lg hover:bg-white transition-colors border border-gray-200 hover:border-gray-300"
+
+                        >
+
+                            Manage Subscription
+                        </button>
+                    </Link>
                 </div>
             </aside>
 
