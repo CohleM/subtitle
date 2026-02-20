@@ -76,6 +76,11 @@ const VideoPlayer = memo(function VideoPlayer({
                     height: '100%',
                 }}
             />
+            {true && (
+                <div className="absolute top-4 left-4 z-10 px-2 py-1.5  backdrop-blur-sm rounded-lg pointer-events-none">
+                    <span className="text-xs font-medium text-white">Low res preview</span>
+                </div>
+            )}
         </div>
     );
 });
@@ -540,6 +545,8 @@ function PlayerPageContent() {
                 <div className="h-full grid grid-cols-2">
                     <div className="h-full flex flex-col items-center justify-center bg-gray-50/30 border-r border-gray-200 p-8">
                         <div className="relative w-full h-full max-h-[calc(100%-4rem)]">
+
+
                             <div
                                 style={{
                                     position: 'absolute',
@@ -567,6 +574,7 @@ function PlayerPageContent() {
                                     videoInfo={videoInfo}
                                 />
                             </div>
+
                         </div>
                         <div className="mt-6 flex items-center gap-4 w-full max-w-sm bg-white border border-gray-200 rounded-xl px-4 py-3">
                             <span className="text-xs font-medium uppercase tracking-wider text-gray-500 shrink-0">
