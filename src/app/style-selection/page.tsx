@@ -7,6 +7,9 @@ import { Navbar } from '../../components/DashboardNavbar';
 import useLocalStorage from 'use-local-storage';
 import { defaultStyleConfigs } from '../../config/styleConfigs';
 
+
+
+
 function StyleSelectionContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -39,44 +42,38 @@ function StyleSelectionContent() {
         setUserId(user_id);
     }, [searchParams, router]);
 
-    const handleStyleComplete = async (videoUrl: string, selectedStyle: string) => {
+    const handleStyleComplete = async (videoUrl: string, selectedStyle: string, languageCode: string) => {
         setIsGenerating(true);
 
         try {
-            // Get the style config for the selected style
             const styleConfig = defaultStyleConfigs[selectedStyle];
 
-            console.log('styleConfig', styleConfig)
+            console.log('styleConfig', styleConfig);
+            console.log('Selected Language Code:', languageCode);
 
             if (!styleConfig) {
                 console.error(`Style "${selectedStyle}" not found`);
-                // Optionally fall back to a default style
-                // styleConfig = defaultStyleConfigs.basic;
                 setIsGenerating(false);
                 return;
             }
 
-            console.log('Video URL:', videoUrl);
-            console.log('Selected Style:', selectedStyle);
-            console.log('Style Config:', styleConfig);
-
-            // Prepare the request data
             const requestData = {
                 user_id: userId,
                 video_id: videoId,
                 video_url: videoUrl,
                 style_config: styleConfig,
-                video_filename: videoFileName
+                video_filename: videoFileName,
+                video_language: languageCode
             };
 
             const response = await fetch(`${apiUrl}/videos/generate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`, // Add authorization header
+                    'Authorization': `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify(requestData),
-            })
+            });
 
             if (!response.ok) {
                 throw new Error(`API call failed with status: ${response.status}`);
@@ -85,16 +82,10 @@ function StyleSelectionContent() {
             const result = await response.json();
             console.log('Generation result:', result);
 
-            // Simulate processing delay (remove this in production)
-            // await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // After processing, redirect to editor or show results
-            // You might want to pass the result data in the URL or use context/state management
             router.push(`/dashboard`);
 
         } catch (error) {
             console.error('Error generating captions:', error);
-            // Handle error appropriately - show error message to user
         } finally {
             setIsGenerating(false);
         }
@@ -207,10 +198,10 @@ function StyleSelectionContent() {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Navbar */}
-                <Navbar />
+                <Navbar showLogo={true} />
 
                 {/* Style Selection Flow */}
-                <div className="flex-1 overflow-hidden">
+                < div className="flex-1 overflow-hidden">
                     <UploadFlow
                         videoUrl={videoUrl}
                         videoFileName={videoFileName}
@@ -219,7 +210,7 @@ function StyleSelectionContent() {
                     />
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
 

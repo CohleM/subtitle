@@ -99,7 +99,7 @@ function RenderViewPageContent() {
 
     return (
         <div className="h-screen w-full bg-white flex flex-col overflow-hidden">
-            <Navbar />
+            <Navbar showLogo={true} />
 
             <div className="flex-1 overflow-hidden flex items-center justify-center p-8">
 

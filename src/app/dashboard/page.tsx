@@ -37,7 +37,7 @@ interface UserInfo {
 const STEP_LABELS: Record<string, string> = {
     queued: 'Queued...',
     downloading: 'Downloading...',
-    converting: 'Converting to low-res...',
+    converting: 'Converting...',
     extracting_audio: 'Extracting audio...',
     transcribing: 'Transcribing...',
     applying_styles: 'Applying styles...',

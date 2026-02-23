@@ -117,7 +117,7 @@ export const StyleSelector: React.FC<{
                                 </button>
 
                                 {/* Edit Button - Appears on hover when selected */}
-                                {selected && isHovered && onEditStyle && (
+                                {selected && onEditStyle && (
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
