@@ -19,7 +19,7 @@ export default function Login() {
 
         try {
             // Changed: POST request to /auth/google with token in body
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/affiliate/google`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -33,7 +33,7 @@ export default function Login() {
                     // localStorage.setItem("access_token", data.access_token);
                     setLocalStorage(data.access_token);
                     setIsSuccess(true);
-                    push("/dashboard");
+                    push("/referral");
                 } else {
                     setIsError(true);
                 }
