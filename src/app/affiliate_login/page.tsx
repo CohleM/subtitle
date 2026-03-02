@@ -10,7 +10,7 @@ export default function Login() {
     const { push } = useRouter();
     const [isError, setIsError] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
-    const [_, setLocalStorage] = useLocalStorage("access_token", "");
+    const [_, setLocalStorage] = useLocalStorage("affiliate_access_token", "");
 
 
     const handleGoogleLoginSuccess = async (response: any) => {
@@ -29,9 +29,9 @@ export default function Login() {
 
             if (res.ok) {
                 const data = await res.json();
-                if (data.access_token) {
+                if (data.affiliate_access_token) {
                     // localStorage.setItem("access_token", data.access_token);
-                    setLocalStorage(data.access_token);
+                    setLocalStorage(data.affiliate_access_token);
                     setIsSuccess(true);
                     push("/referral");
                 } else {

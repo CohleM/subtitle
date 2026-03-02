@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import useLocalStorage from 'use-local-storage';
@@ -104,8 +104,8 @@ function CopyButton({ text }: { text: string }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ReferralPortal() {
-    const router = useRouter();
-    const [accessToken] = useLocalStorage('access_token', '');
+    // const router = useRouter();
+    const [accessToken] = useLocalStorage('affiliate_access_token', '');
 
     const [tab, setTab] = useState<Tab>('home');
     const [referrer, setReferrer] = useState<ReferrerData | null>(null);
@@ -415,7 +415,7 @@ function HomeTab({ referrer, referralLink, hasPaymentInfo, editingProfile, setEd
     const [newCodeInput, setNewCodeInput] = useState('');
     const [savingCode, setSavingCode] = useState(false);
     const [codeError, setCodeError] = useState('');
-    const [accessToken] = useLocalStorage('access_token', '');
+    const [accessToken] = useLocalStorage('affiliate_access_token', '');
 
     const handleCodeChange = async () => {
         setCodeError('');
@@ -795,16 +795,12 @@ function PayoutsTab({ payouts, loading, totalEarned, hasPaymentInfo, onGoToProfi
 
 function AssetsTab() {
     const assets = [
-        { name: 'PrimeClip Logo (PNG)', desc: 'Full color, transparent background', url: '/brand/logo.png', type: 'Logo' },
-        { name: 'PrimeClip Logo (SVG)', desc: 'Vector format for any size', url: '/brand/logo.svg', type: 'Logo' },
-        { name: 'Logo White (PNG)', desc: 'For dark backgrounds', url: '/brand/logo-white.png', type: 'Logo' },
-        { name: 'Banner 1200×628', desc: 'Social media share image', url: '/brand/banner-1200x628.png', type: 'Banner' },
-        { name: 'Square 1080×1080', desc: 'Instagram / square post', url: '/brand/square-1080.png', type: 'Banner' },
+        { name: 'PrimeClip Logo (PNG)', desc: 'Full color, transparent background', url: 'https://drive.google.com/file/d/15vwQ3TbnwAa5K8HsMSbPkRUVb98pAQW8/view?usp=sharing', type: 'Logo' },
+
     ];
 
     const brandColors = [
-        { name: 'Primary', hex: '#000000' },
-        { name: 'Accent', hex: '#6366F1' },
+        { name: 'Primary', hex: '#FF3898' },
         { name: 'Light', hex: '#F9FAFB' },
     ];
 
@@ -852,6 +848,7 @@ function AssetsTab() {
                                 href={a.url}
                                 download
                                 className="flex items-center gap-1 text-[10px] font-medium text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-md transition-colors"
+                                target="_blank" rel="noopener noreferrer"
                             >
                                 <ExternalLink className="w-3 h-3" />
                                 Download
@@ -868,8 +865,6 @@ function AssetsTab() {
                     {[
                         "Don't modify or distort the logo",
                         "Don't use the logo on backgrounds that reduce contrast",
-                        "Always link back to primeclip.pro with your referral link",
-                        "Don't claim to be affiliated with or employed by PrimeClip",
                     ].map((g, i) => (
                         <div key={i} className="flex items-start gap-2">
                             <div className="w-1 h-1 bg-gray-400 rounded-full mt-1.5 shrink-0" />
