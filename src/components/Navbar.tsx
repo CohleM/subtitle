@@ -30,6 +30,9 @@ export function Navbar() {
                     <Link href="#pricing" className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
                         Pricing
                     </Link>
+                    <Link href="/affiliate_login" className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
+                        Become affiliate
+                    </Link>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -45,6 +48,7 @@ export function Navbar() {
                     >
                         Try for free
                     </Link>
+
                 </div>
 
                 <button

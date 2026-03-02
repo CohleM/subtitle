@@ -48,19 +48,125 @@ export default function Login() {
     return (
         <div className="flex min-h-screen">
             {/* Left side - Image/GIF */}
-            <div className="hidden lg:flex lg:w-1/2 bg-[var(--color-bg)] items-center justify-center p-12">
-                <div className="max-w-md text-center">
-                    {/* <img
-                        src="/your-gif-or-image.gif"
-                        alt="App preview"
-                        className="w-full rounded-lg shadow-sm mb-6"
-                    /> */}
-                    <h2 className="text-4xl font-semibold text-[var(--color-primary)] mb-2">
-                        Create stunning videos
-                    </h2>
-                    <p className="text-[var(--color-text-muted)]">
-                        Edit transcripts, add stunning styles, and export in minutes.
-                    </p>
+            {/* Left side */}
+            <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center overflow-hidden">
+                {/* Base background */}
+                <div style={{ position: 'absolute', inset: 0, background: 'var(--color-primary)' }} />
+
+                {/* Subtle noise texture overlay */}
+                <div style={{
+                    position: 'absolute', inset: 0,
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E")`,
+                    opacity: 0.4
+                }} />
+
+                {/* Soft glow circles */}
+                <div style={{
+                    position: 'absolute', top: '-100px', right: '-100px',
+                    width: '450px', height: '450px', borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%)'
+                }} />
+                <div style={{
+                    position: 'absolute', bottom: '-80px', left: '-80px',
+                    width: '380px', height: '380px', borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)'
+                }} />
+
+                <style>{`
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .login-fade-1 { animation: fadeUp 0.6s ease forwards 0.1s; opacity: 0; }
+        .login-fade-2 { animation: fadeUp 0.6s ease forwards 0.25s; opacity: 0; }
+        .login-fade-3 { animation: fadeUp 0.6s ease forwards 0.4s; opacity: 0; }
+        .login-fade-4 { animation: fadeUp 0.6s ease forwards 0.55s; opacity: 0; }
+    `}</style>
+
+                {/* Content */}
+                <div style={{ position: 'relative', zIndex: 10, padding: '3.5rem', maxWidth: '460px', width: '100%' }}>
+
+                    {/* Badge */}
+                    <div className="login-fade-1" style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '7px',
+                        background: 'rgba(255,255,255,0.15)',
+                        border: '1px solid rgba(255,255,255,0.3)',
+                        borderRadius: '100px', padding: '5px 14px', marginBottom: '2.2rem'
+                    }}>
+                        <div style={{
+                            width: '6px', height: '6px', borderRadius: '50%',
+                            background: '#fff', boxShadow: '0 0 6px rgba(255,255,255,0.8)'
+                        }} />
+                        <span style={{
+                            color: 'rgba(255,255,255,0.95)', fontSize: '11px',
+                            fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase'
+                        }}>
+                            PrimeClip
+                        </span>
+                    </div>
+
+                    {/* Headline */}
+                    <div className="login-fade-2">
+                        <h2 style={{
+                            fontFamily: 'Georgia, serif',
+                            fontSize: 'clamp(2.6rem, 4vw, 3.4rem)',
+                            fontWeight: 700,
+                            lineHeight: 1.1,
+                            color: '#fff',
+                            marginBottom: '1rem'
+                        }}>
+                            Create stunning<br />
+                            <span style={{ opacity: 0.85 }}>subtitle videos</span><br />
+                            <span style={{ opacity: 0.85 }}>in minutes.</span>
+                        </h2>
+                    </div>
+
+                    {/* Subline */}
+                    <div className="login-fade-2">
+                        <p style={{
+                            color: 'rgba(255,255,255,0.7)', fontSize: '14px',
+                            lineHeight: 1.6, marginBottom: '2rem'
+                        }}>
+                            Edit transcripts, add stunning styles, and export in minutes.
+                        </p>
+                    </div>
+
+                    {/* Feature cards */}
+                    <div className="login-fade-3" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '2.5rem' }}>
+                        {[
+                            // { label: 'Auto-transcription', desc: 'Accurate captions in seconds' },
+                            { label: 'Beautiful styles', desc: 'Dozens of subtitle templates' },
+                            { label: 'One-click export', desc: 'Ready for any platform' },
+                        ].map(item => (
+                            <div key={item.label} style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                background: 'rgba(255,255,255,0.12)',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '12px', padding: '13px 18px',
+                                backdropFilter: 'blur(10px)'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)' }} />
+                                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: 500 }}>{item.label}</span>
+                                </div>
+                                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{item.desc}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Divider */}
+                    <div style={{ height: '1px', background: 'rgba(255,255,255,0.15)', marginBottom: '1.8rem' }} />
+
+                    {/* Footer stats */}
+                    <div className="login-fade-4" style={{ display: 'flex', gap: '2.5rem' }}>
+                        {[
+                            { label: 'Videos created', value: '10k+' },
+                            { label: 'Languages', value: '30+' },
+                            { label: 'Export formats', value: '5+' },
+                        ].map(s => (
+                            <div key={s.label}>
+                                <p style={{ color: '#fff', fontWeight: 700, fontSize: '17px', lineHeight: 1 }}>{s.value}</p>
+                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', marginTop: '4px' }}>{s.label}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 

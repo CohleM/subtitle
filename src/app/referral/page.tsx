@@ -495,7 +495,7 @@ function HomeTab({ referrer, referralLink, hasPaymentInfo, editingProfile, setEd
                 <div className="text-right space-y-1">
                     <p className="text-[11px] text-gray-400">Premium sale → <span className="font-semibold text-gray-700">$5.70</span></p>
                     <p className="text-[11px] text-gray-400">Ultra sale → <span className="font-semibold text-gray-700">$11.70</span></p>
-                    <p className="text-[11px] text-gray-400 mt-2">30% recurring commission</p>
+                    <p className="text-[11px] text-gray-400 mt-2">30% on every customer payment</p>
                 </div>
             </div>
 
