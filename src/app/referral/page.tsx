@@ -285,13 +285,13 @@ export default function ReferralPortal() {
                 </nav>
 
                 {/* Spacer + back to dashboard */}
-                <div className="ml-auto">
+                {/* <div className="ml-auto">
                     <Link href="/dashboard">
                         <button className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 transition-colors">
                             ← Dashboard
                         </button>
                     </Link>
-                </div>
+                </div> */}
             </header>
 
             {/* Page content */}
@@ -448,7 +448,7 @@ function HomeTab({ referrer, referralLink, hasPaymentInfo, editingProfile, setEd
         <div className="space-y-5">
 
             {/* Payment method warning */}
-            {!hasPaymentInfo && (
+            {/* {!hasPaymentInfo && (
                 <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                     <div className="flex items-center gap-3">
                         <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
@@ -461,7 +461,7 @@ function HomeTab({ referrer, referralLink, hasPaymentInfo, editingProfile, setEd
                         Add payout method →
                     </button>
                 </div>
-            )}
+            )} */}
 
             {/* Stats row - SubMagic style */}
             <div className="bg-white border border-gray-200 rounded-xl p-6">
@@ -509,6 +509,13 @@ function HomeTab({ referrer, referralLink, hasPaymentInfo, editingProfile, setEd
                                 className="p-1.5 hover:bg-gray-100 rounded-md transition-colors">
                                 <X className="w-4 h-4 text-gray-500" />
                             </button>
+                        </div>
+                        {/* ✅ Add this warning below */}
+                        <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
+                            <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                            <p className="text-xs text-amber-700 leading-relaxed">
+                                Note that changing the referral code will invalidate any already shared links.
+                            </p>
                         </div>
                         <div>
                             <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">New code</label>
