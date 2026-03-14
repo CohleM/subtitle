@@ -3,7 +3,7 @@ import { memo, useMemo, useState, useEffect } from 'react';
 import { interpolate, spring, useCurrentFrame, useVideoConfig, delayRender, continueRender } from 'remotion';
 import { AnimationType, SubtitleStyleConfig } from '../../../../types/style';
 import {
-    ANIMATION_ANTICIPATION_FRAMES, FADE_OUT_DURATION_FRAMES, MAX_WORD_DISPLAY_SECONDS
+    ANIMATION_ANTICIPATION_FRAMES
 } from './subtitleUtils';
 
 // Font preloads (only need to happen once, anywhere)
