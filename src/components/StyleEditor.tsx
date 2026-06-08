@@ -30,6 +30,8 @@ const ALL_ANIMATION_TYPES: { value: AnimationType; label: string; description: s
     { value: 'slide-right', label: 'Slide Right', description: 'Slides in from left' },
     { value: 'scale', label: 'Scale', description: 'Scales up from center' },
     { value: 'fade-blur', label: 'Fade Blur', description: 'Fades in with blur' },
+    { value: 'basic', label: 'Basic', description: 'no effect' },
+
 ];
 
 const AVAILABLE_FONTS = [
@@ -500,6 +502,7 @@ export const StyleEditor: React.FC<StyleEditorProps> = ({
                                                             {value.includes('slide') && <Move className="w-4 h-4" />}
                                                             {value === 'scale' && <Maximize className="w-4 h-4" />}
                                                             {value === 'fade-blur' && <Sparkles className="w-4 h-4" />}
+                                                            {value === 'basic' && <Maximize className="w-4 h-4" />}
                                                         </div>
                                                         <div>
                                                             <div className="text-sm font-medium">{label}</div>

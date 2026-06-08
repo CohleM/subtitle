@@ -53,6 +53,7 @@ export const useWordAnimation = (
             case 'slide-right': return { transform: `translateX(${interpolate(t, [0, 1], [-100, 0])}px)`, opacity, filter: blur(4) };
             case 'scale': return { transform: `scale(${interpolate(t, [0, 1], [0.5, 1])})`, opacity, filter: blur(4) };
             case 'fade-blur': return { transform: 'none', opacity, filter: blur(10) };
+            case 'basic': return { transform: 'none', opacity, filter: 'none' };
             default: return { transform: `translateY(${interpolate(t, [0, 1], [50, 0])}px)`, opacity, filter: blur(4) };
         }
     }, [animationType, springValue]);

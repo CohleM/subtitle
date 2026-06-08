@@ -34,7 +34,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     /* Same colors for dark mode, or adjust if you want different dark theme */
-    --color-primary: #FF3898;
+    --color-primary: #ff3898;
     --color-primary-hover: #f51682;
     --color-text: #1E1E24;
     --color-text-muted: #6b7280;
