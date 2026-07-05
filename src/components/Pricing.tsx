@@ -41,7 +41,7 @@ const pricingPlans: PricingPlan[] = [
     },
     {
         name: 'Premium',
-        price: '$19',
+        price: '$5',
         period: '/month',
         description: 'Best for consistent content creators',
         features: [
@@ -61,7 +61,7 @@ const pricingPlans: PricingPlan[] = [
     },
     {
         name: 'Ultra',
-        price: '$39',
+        price: '$15',
         period: '/month',
         description: 'For power users and long-form content',
         features: [

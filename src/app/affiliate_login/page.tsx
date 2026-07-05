@@ -133,8 +133,8 @@ export default function Login() {
                     {/* Payout cards */}
                     <div className="aff-fade-3" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '2.5rem' }}>
                         {[
-                            { plan: 'Premium', price: '$19/mo', earn: '+$5.70' },
-                            { plan: 'Ultra', price: '$39/mo', earn: '+$11.70' },
+                            { plan: 'Premium', price: '$5/mo', earn: '+$1.50' },
+                            { plan: 'Ultra', price: '$15/mo', earn: '+$4.50' },
                         ].map(item => (
                             <div key={item.plan} style={{
                                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',

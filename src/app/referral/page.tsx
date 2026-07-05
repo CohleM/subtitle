@@ -892,7 +892,7 @@ function FAQ() {
         { q: 'When will I get paid?', a: 'Payouts are processed on the 15th of each month via PayPal. You need a minimum balance of $20 to receive a payout.' },
         { q: "What's the referral cookie life?", a: 'The referral cookie lasts 30 days. If someone clicks your link but signs up after 30 days, the conversion won\'t be tracked.' },
         { q: 'Why can\'t I see my sign-ups?', a: 'Tracking is cookie-based. If the user cleared cookies, used incognito, or signed up from a different device, the signup may not be tracked.' },
-        { q: 'How is commission calculated?', a: 'You earn 30% of every first payment made by your referrals. Premium ($19) → $5.70 · Ultra ($39) → $11.70.' },
+        { q: 'How is commission calculated?', a: 'You earn 30% of every first payment made by your referrals. Premium ($5) → $1.50 · Ultra ($15) → $4.50.' },
     ];
 
     return (
